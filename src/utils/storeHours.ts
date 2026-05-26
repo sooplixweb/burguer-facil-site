@@ -14,7 +14,7 @@ export function getStoreStatusNow() {
 
   if (!openNow) {
     if (h < STORE_HOURS.open) hoursToOpen = STORE_HOURS.open - h;
-    else hoursToOpen = (24 - h) + STORE_HOURS.open;
+    else hoursToOpen = 24 - h + STORE_HOURS.open;
   }
 
   return {
