@@ -1,5 +1,5 @@
 // src/utils/storeHours.ts
-export const STORE_HOURS = { open: 9, close: 10 };
+export const STORE_HOURS = { open: 8, close: 10 };
 
 export function isOpenNowByHour(h: number) {
   return h >= STORE_HOURS.open || h < STORE_HOURS.close;
