@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import Cart from "./pages/cart/Cart";
 import Main from "./pages/main/Main";
@@ -17,6 +17,7 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<DashboardLayout />}>
+          <Route index element={<Navigate to="/main" replace />} />
           <Route path="main" element={<Main />} />
           <Route path="foodDetails" element={<FoodDetails />} />
           <Route path="cart" element={<Cart />} />
