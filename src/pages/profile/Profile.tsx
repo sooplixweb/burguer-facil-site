@@ -69,23 +69,9 @@ const settingsOptions = [
 ];
 
 export default function Profile() {
-  const navigate = useNavigate();
-  const searchRef = useRef<HTMLInputElement | null>(null);
-  const [search, setSearch] = useState("");
 
   return (
     <div className={styles.screen}>
-      <Header
-        search={search}
-        searchRef={searchRef}
-        onCartClick={() => navigate("/cart")}
-        onSearchChange={setSearch}
-        onClearSearch={() => {
-          setSearch("");
-          searchRef.current?.blur();
-        }}
-      />
-
       <main className={styles.content}>
         <section className={styles.profileCard}>
           <img
