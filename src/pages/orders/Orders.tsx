@@ -7,7 +7,6 @@ import {
   Home,
   Map,
 } from "lucide-react";
-import { Header } from "../../components/Header/Header";
 import type { OrderResponseDto } from "../../dtos/response/order-response.dto";
 import { OrderService } from "../../service/order.service";
 import { formatOrderCode } from "../../utils/formatOrderCode";
@@ -230,7 +229,6 @@ export default function Orders() {
 
   return (
     <div className={styles.screen}>
-      <Header showSearch={false} onCartClick={() => navigate("/cart")} />
 
       <main className={styles.content}>
         <h1 className={styles.title}>Pedidos</h1>

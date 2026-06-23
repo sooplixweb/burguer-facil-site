@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Beef,
   CupSoda,
@@ -9,7 +8,6 @@ import {
   ShoppingBasket,
   Star,
 } from "lucide-react";
-import { Header } from "../../components/Header/Header";
 import styles from "./Favorites.module.css";
 
 const favorites = [
@@ -55,7 +53,6 @@ const filters = [
 ];
 
 export default function Favorites() {
-  const navigate = useNavigate();
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
@@ -76,8 +73,6 @@ export default function Favorites() {
 
   return (
     <div className={styles.screen}>
-      <Header showSearch={false} onCartClick={() => navigate("/cart")} />
-
       <main className={styles.content}>
         <h1 className={styles.title}>Favoritos</h1>
 

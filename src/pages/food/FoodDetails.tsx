@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import styles from "./FoodDetails.module.css";
@@ -9,10 +10,11 @@ import {
   ArrowLeft,
   ShoppingCart,
 } from "lucide-react";
-import { addCart, FoodCard } from "../../components/food/FoodCard";
+import { FoodCard } from "../../components/food/FoodCard";
 import type { FoodResponseDto } from "../../dtos/Food-Response.Dto";
 import { toast, ToastContainer } from "react-toastify";
 import Colors from "../../themes/Colors";
+import { addCart } from "../../utils/cartStorage";
 
 type Addon = {
   id: string;
@@ -26,29 +28,60 @@ type DrinkOption = {
   name: string;
 };
 
+type FoodDetailsNavState = {
+  item?: FoodResponseDto;
+  productsMock?: FoodResponseDto[];
+};
+
+type CheckoutItem = {
+  id: string;
+  name: string;
+  price: number;
+  qty: number;
+  note?: string;
+  subtitle?: string;
+  image: string;
+};
+
+type FoodDetailsCssVars = CSSProperties & {
+  "--bg-primary": string;
+  "--bg-secondary": string;
+  "--text-primary": string;
+  "--text-secondary": string;
+  "--highlight": string;
+};
+
 const BRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function FoodDetails() {
   const navigation = useNavigate();
   const location = useLocation();
+  const initialState = (location.state || {}) as FoodDetailsNavState;
+  const initialProduct = initialState.item ?? null;
 
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState("");
   const [cartActived, setCartActivedCart] = useState(false);
-  const [products, setProducts] = useState<FoodResponseDto | null>(null);
+  const [products, setProducts] = useState<FoodResponseDto | null>(
+    initialProduct
+  );
   const [selectedAddons, setSelectedAddons] = useState<Record<string, boolean>>(
     {}
   );
   const [selectedDrinkOption, setSelectedDrinkOption] = useState<string | null>(
     null
   );
-  const [complements, setComplements] = useState<FoodResponseDto[]>([]);
-  const [productStack, setProductStack] = useState<FoodResponseDto[]>([]);
+  const [complements] = useState<FoodResponseDto[]>(
+    Array.isArray(initialState.productsMock) ? initialState.productsMock : []
+  );
+  const [productStack, setProductStack] = useState<FoodResponseDto[]>(
+    initialProduct ? [initialProduct] : []
+  );
 
   const stackRef = useRef<FoodResponseDto[]>([]);
   const mountedRef = useRef(false);
-  const prevScrollRestoration = useRef<string | null>(null);
+  const prevScrollRestoration = useRef<ScrollRestoration | null>(null);
   const ignoreNextPopRef = useRef(false);
 
   const resetForNewProduct = () => {
@@ -77,33 +110,25 @@ export default function FoodDetails() {
     prevScrollRestoration.current = window.history.scrollRestoration;
     try {
       window.history.scrollRestoration = "manual";
-    } catch {}
+    } catch {
+      // Some browsers may not allow changing scroll restoration.
+    }
 
-    const state = (location.state || {}) as {
-      item?: FoodResponseDto;
-      productsMock?: FoodResponseDto[];
-    };
-
-    if (state.item) {
-      setProducts(state.item);
-      setProductStack([state.item]);
-      setComplements(
-        Array.isArray(state.productsMock) ? state.productsMock : []
-      );
-      resetForNewProduct();
+    if (initialProduct) {
       window.scrollTo({ top: 0, behavior: "auto" });
-
       pushTrapHistoryState();
     }
 
     return () => {
       try {
         if (prevScrollRestoration.current) {
-          window.history.scrollRestoration = prevScrollRestoration.current as any;
+          window.history.scrollRestoration = prevScrollRestoration.current;
         }
-      } catch {}
+      } catch {
+        // Ignore restoration failures.
+      }
     };
-  }, []);
+  }, [initialProduct]);
 
   useEffect(() => {
     const onPopState = () => {
@@ -228,14 +253,14 @@ export default function FoodDetails() {
   const checkoutItem = useMemo(() => {
     if (!cartItem) return null;
     return {
-      id: String((cartItem as any).id || ""),
-      name: String((cartItem as any).name || ""),
-      price: Number((cartItem as any).price || 0),
-      qty: Number((cartItem as any).qty || 1),
-      note: (cartItem as any).note,
-      subtitle: (cartItem as any).subtitle,
-      image: String((cartItem as any).img || (cartItem as any).image || ""),
-    };
+      id: String(cartItem.id || ""),
+      name: String(cartItem.name || ""),
+      price: Number(cartItem.price || 0),
+      qty: Number(cartItem.qty || 1),
+      note: cartItem.note,
+      subtitle: cartItem.subtitle,
+      image: String(cartItem.img || ""),
+    } satisfies CheckoutItem;
   }, [cartItem]);
 
   const checkoutState = useMemo(() => {
@@ -270,7 +295,7 @@ export default function FoodDetails() {
           "--text-primary": Colors.Texts.primary,
           "--text-secondary": Colors.Texts.secondary,
           "--highlight": Colors.Highlight.primary,
-        } as React.CSSProperties
+        } as FoodDetailsCssVars
       }
     >
       <ToastContainer position="top-center" />

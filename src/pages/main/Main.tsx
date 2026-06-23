@@ -1,4 +1,5 @@
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import type { CSSProperties } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import Colors from "../../themes/Colors";
 import styles from "./Main.module.css";
 import { FoodCard } from "../../components/food/FoodCard";
@@ -9,6 +10,7 @@ import {
   ShoppingCart,
   HamburgerIcon,
   Star,
+  type LucideIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import whatsapp from "../../assets/whatsapp.png";
@@ -21,7 +23,15 @@ import { toast, ToastContainer } from "react-toastify";
 import { useStoreStatus } from "../../hooks/useStoreStatus";
 import { ProductService } from "../../service/product.service";
 
-const categoryIcons: Record<string, any> = {
+type MainCssVars = CSSProperties & {
+  "--bg-primary": string;
+  "--bg-secondary": string;
+  "--text-primary": string;
+  "--text-secondary": string;
+  "--highlight": string;
+};
+
+const categoryIcons: Record<string, LucideIcon> = {
   Sanduíches: HamburgerIcon,
   Bebidas: CupSoda,
   Adicionais: PlusCircle,
@@ -113,7 +123,9 @@ export default function Main() {
         }
         localStorage.setItem(KEY, "1");
       }
-    } catch {}
+    } catch {
+      // Ignore storage access errors.
+    }
   }, [openNow, storeStatus.hoursToOpen, storeStatus.loading]);
 
   useEffect(() => {
@@ -166,7 +178,7 @@ export default function Main() {
           "--text-primary": Colors.Texts.primary,
           "--text-secondary": Colors.Texts.secondary,
           "--highlight": Colors.Highlight.primary,
-        } as React.CSSProperties
+        } as MainCssVars
       }
     >
       <div className={styles.page}>
@@ -221,7 +233,7 @@ export default function Main() {
                 "--text-primary": Colors.Texts.primary,
                 "--text-secondary": Colors.Texts.secondary,
                 "--highlight": Colors.Highlight.primary,
-              } as React.CSSProperties
+              } as MainCssVars
             }
           >
             <MainSkeleton />

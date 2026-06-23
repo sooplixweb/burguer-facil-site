@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
+import { useMemo, useState } from "react";
 import styles from "./Cart.module.css";
 import Colors from "../../themes/Colors";
 import {
@@ -12,6 +13,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { useStoreStatus } from "../../hooks/useStoreStatus";
+import {
+  makeCartMergeKey,
+  type StoredCartItem,
+} from "../../utils/cartStorage";
 
 type CartItem = {
   id: string;
@@ -23,72 +28,72 @@ type CartItem = {
   image: string;
 };
 
-function makeMergeKey(p: any) {
-  const id = String(p?.id ?? "").trim();
-  if (id) return `id:${id}`;
-  const name = String(p?.name ?? "").trim().toLowerCase();
-  return `name:${name || "unknown"}`;
+type CartCssVars = CSSProperties & {
+  "--bgPrimary": string;
+  "--bgSecondary": string;
+  "--highlight": string;
+  "--textPrimary": string;
+  "--textSecondary": string;
+};
+
+function parseStoredCartItems(): CartItem[] {
+  const raw = localStorage.getItem("food");
+  if (!raw) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    const arr = Array.isArray(parsed) ? parsed : [parsed];
+    const mergedMap: Record<string, CartItem> = {};
+
+    for (const value of arr) {
+      if (!value || typeof value !== "object") continue;
+      const product = value as StoredCartItem;
+      const key = makeCartMergeKey(product);
+      const safeId = String(product.id ?? "").trim();
+
+      const qty = Number(product.qty ?? product.quantity ?? 1);
+      const safeQty = Number.isFinite(qty) && qty > 0 ? qty : 1;
+
+      const name = String(product.name ?? "Item");
+      const price = Number(product.price ?? 0);
+      const image = String(product.image ?? product.img ?? "");
+
+      if (!mergedMap[key]) {
+        mergedMap[key] = {
+          id: safeId,
+          name,
+          price,
+          qty: safeQty,
+          note: product.note ? String(product.note) : undefined,
+          subtitle: product.subtitle ? String(product.subtitle) : undefined,
+          image,
+        };
+      } else {
+        mergedMap[key].qty += safeQty;
+
+        if (!mergedMap[key].image && image) mergedMap[key].image = image;
+        if (!mergedMap[key].subtitle && product.subtitle) {
+          mergedMap[key].subtitle = String(product.subtitle);
+        }
+        if (!mergedMap[key].note && product.note) {
+          mergedMap[key].note = String(product.note);
+        }
+      }
+    }
+
+    return Object.values(mergedMap);
+  } catch (error) {
+    console.error("Erro lendo localStorage product:", error);
+    return [];
+  }
 }
 
 export default function Cart() {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(parseStoredCartItems);
   const navigation = useNavigate();
   const [orderObs, setOrderObs] = useState("");
   const deliveryFee = 5;
   const storeStatus = useStoreStatus();
-
-  useEffect(() => {
-    const raw = localStorage.getItem("food");
-    if (!raw) return;
-
-    try {
-      const parsed = JSON.parse(raw);
-      const arr = Array.isArray(parsed) ? parsed : [parsed];
-
-      const mergedMap: Record<string, CartItem> = {};
-
-      for (const p of arr) {
-        if (!p) continue;
-
-        const key = makeMergeKey(p);
-        const safeId = String(p?.id ?? "").trim();
-
-        const qty = Number(p?.qty ?? 1);
-        const safeQty = Number.isFinite(qty) && qty > 0 ? qty : 1;
-
-        const name = String(p?.name ?? "Item");
-        const price = Number(p?.price ?? 0);
-        const image = String(p?.image ?? p?.img ?? "");
-
-        if (!mergedMap[key]) {
-          mergedMap[key] = {
-            id: safeId,
-            name,
-            price,
-            qty: safeQty,
-            note: p.note ? String(p.note) : undefined,
-            subtitle: p.subtitle ? String(p.subtitle) : undefined,
-            image,
-          };
-        } else {
-          mergedMap[key].qty += safeQty;
-
-          if (!mergedMap[key].image && image) mergedMap[key].image = image;
-          if (!mergedMap[key].subtitle && p.subtitle)
-            mergedMap[key].subtitle = String(p.subtitle);
-          if (!mergedMap[key].note && p.note)
-            mergedMap[key].note = String(p.note);
-        }
-      }
-
-      const merged = Object.values(mergedMap);
-
-      setItems(merged);
-      localStorage.setItem("food", JSON.stringify(merged));
-    } catch (e) {
-      console.error("Erro lendo localStorage product:", e);
-    }
-  }, []);
 
   const subtotal = useMemo(() => {
     return items.reduce((acc, it) => acc + it.price * it.qty, 0);
@@ -145,12 +150,12 @@ export default function Cart() {
         className={styles.screen}
         style={
           {
-            ["--bgPrimary" as any]: Colors.Background.primary,
-            ["--bgSecondary" as any]: Colors.Background.secondary,
-            ["--highlight" as any]: Colors.Highlight.primary,
-            ["--textPrimary" as any]: Colors.Texts.primary,
-            ["--textSecondary" as any]: Colors.Texts.secondary,
-          } as React.CSSProperties
+            "--bgPrimary": Colors.Background.primary,
+            "--bgSecondary": Colors.Background.secondary,
+            "--highlight": Colors.Highlight.primary,
+            "--textPrimary": Colors.Texts.primary,
+            "--textSecondary": Colors.Texts.secondary,
+          } as CartCssVars
         }
       >
         <div className={styles.content}>

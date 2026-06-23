@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./Checkout.module.css";
 import Colors from "../../themes/Colors";
 import {
@@ -54,6 +55,14 @@ type SavedAddress = {
   createdAt: number;
 };
 
+type CheckoutCssVars = CSSProperties & {
+  "--bgPrimary": string;
+  "--bgSecondary": string;
+  "--highlight": string;
+  "--textPrimary": string;
+  "--textSecondary": string;
+};
+
 const LS_KEY = "mb_checkout_addresses_v1";
 const LS_SELECTED_KEY = "mb_checkout_selected_address_v1";
 
@@ -89,7 +98,7 @@ function maskUf(input: string) {
 }
 
 function maskMoneyBR(input: string) {
-  const cleaned = input.replace(/[^\d,\.]/g, "").replace(/\./g, ",");
+  const cleaned = input.replace(/[^\d,.]/g, "").replace(/\./g, ",");
   const parts = cleaned.split(",");
   const i = parts[0].replace(/\D/g, "").slice(0, 6);
   const f = (parts[1] || "").replace(/\D/g, "").slice(0, 2);
@@ -156,7 +165,9 @@ export default function Checkout() {
     try {
       const sel = localStorage.getItem(LS_SELECTED_KEY);
       if (sel) setSelectedAddressId(sel);
-    } catch {}
+    } catch {
+      // Ignore storage access errors.
+    }
   }, []);
 
   useEffect(() => {
@@ -386,13 +397,13 @@ export default function Checkout() {
     <div
       className={styles.screen}
       style={
-        {
-          ["--bgPrimary" as any]: Colors.Background.primary,
-          ["--bgSecondary" as any]: Colors.Background.secondary,
-          ["--highlight" as any]: Colors.Highlight.primary,
-          ["--textPrimary" as any]: Colors.Texts.primary,
-          ["--textSecondary" as any]: Colors.Texts.secondary,
-        } as React.CSSProperties
+          {
+          "--bgPrimary": Colors.Background.primary,
+          "--bgSecondary": Colors.Background.secondary,
+          "--highlight": Colors.Highlight.primary,
+          "--textPrimary": Colors.Texts.primary,
+          "--textSecondary": Colors.Texts.secondary,
+        } as CheckoutCssVars
       }
     >
       <ToastContainer position="top-center" />
