@@ -4,10 +4,11 @@ import { toast } from "react-toastify";
 import Colors from "../../themes/Colors";
 
 type FoodCardProps = {
-  id?: number;
+  id?: string;
   name?: string;
   desc?: string;
   price?: number;
+  originalPrice?: number;
   img?: string;
   badge?: string;
   onDetails?: () => void;
@@ -76,11 +77,15 @@ export function FoodCard({
   functions,
   desc,
   price,
+  originalPrice,
   img,
   badge,
   onDetails,
 }: FoodCardProps) {
-  const priceMin = price !== undefined ? price + 7 : undefined;
+  const oldPrice =
+    originalPrice !== undefined && price !== undefined && originalPrice > price
+      ? originalPrice
+      : undefined;
 
   const item = {
     id,
@@ -130,7 +135,9 @@ export function FoodCard({
 
         <div className={styles.bottom}>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span className={styles.minPrice}>{formatMoney(priceMin)}</span>
+            {oldPrice !== undefined && (
+              <span className={styles.minPrice}>{formatMoney(oldPrice)}</span>
+            )}
             <span className={styles.price}>{formatMoney(price)}</span>
           </div>
           <button type="button" className={styles.button} onClick={onDetails}>

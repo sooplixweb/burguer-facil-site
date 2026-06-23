@@ -10,6 +10,10 @@ export const OrderService = {
     });
   },
 
+  findAll: async (): Promise<OrderResponseDto[]> => {
+    return apiRequest<OrderResponseDto[]>("/orders/find-all");
+  },
+
   findById: async (id: string): Promise<OrderResponseDto> => {
     return apiRequest<OrderResponseDto>(`/orders/${id}`);
   },

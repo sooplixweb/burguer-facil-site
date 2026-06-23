@@ -21,7 +21,7 @@ import type { OrderRequestDto } from "../../dtos/request/order-request.dto";
 import { useStoreStatus } from "../../hooks/useStoreStatus";
 
 type CartItem = {
-  id: number;
+  id: string;
   name: string;
   price: number;
   qty: number;

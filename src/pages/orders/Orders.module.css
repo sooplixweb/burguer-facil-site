@@ -5,14 +5,15 @@
 
 .content {
   width: 100%;
-  max-width: 760px;
+  max-width: 820px;
   margin: 0 auto;
-  padding: 24px 16px 28px;
+  padding: 28px 18px 32px;
 }
 
 .title {
-  margin: 0 0 12px;
-  font-size: 27px;
+  margin: 0 0 16px;
+  font-size: clamp(30px, 7vw, 44px);
+  line-height: 1;
   font-weight: 900;
 }
 
@@ -20,20 +21,23 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   overflow: hidden;
-  margin-bottom: 22px;
+  margin-bottom: 26px;
   padding: 4px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.03);
 }
 
 .tabs button {
-  min-height: 42px;
+  min-height: 50px;
+  padding: 0 10px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 13px;
   background: transparent;
   color: rgba(255, 255, 255, 0.67);
   font-size: 14px;
+  font-weight: 700;
+  line-height: 1.15;
   cursor: pointer;
 }
 
@@ -43,17 +47,18 @@
   font-weight: 900;
 }
 
-.currentOrder,
-.recentList {
+.ordersList {
+  display: grid;
+  gap: 18px;
+}
+
+.currentOrder {
+  padding: 24px;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 14px;
   background:
     radial-gradient(420px 260px at 50% 0%, rgba(255, 255, 255, 0.06), transparent 68%),
     rgba(255, 255, 255, 0.035);
-}
-
-.currentOrder {
-  padding: 20px;
 }
 
 .orderTop {
@@ -65,48 +70,101 @@
 
 .orderTop h2 {
   margin: 0 0 8px;
-  font-size: 20px;
+  font-size: clamp(22px, 5.3vw, 32px);
+  line-height: 1.08;
   font-weight: 800;
 }
 
 .orderTop p {
   display: flex;
+  flex-wrap: wrap;
   gap: 7px;
   margin: 0;
   color: rgba(255, 255, 255, 0.58);
+  font-size: clamp(16px, 4vw, 24px);
+  line-height: 1.2;
 }
 
 .orderTop p strong {
   color: #ffd400;
 }
 
-.preparing {
+.statusBadge {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 13px;
-  border: 1px solid #ffd400;
+  flex: 0 0 auto;
+  padding: 9px 14px;
   border-radius: 999px;
-  color: #ffd400;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
+}
+
+.status_active {
+  border: 1px solid #ffd400;
+  color: #ffd400;
+  background: rgba(255, 212, 0, 0.05);
+}
+
+.status_route {
+  border: 1px solid rgba(249, 115, 22, 0.55);
+  color: #fb923c;
+  background: rgba(249, 115, 22, 0.12);
+}
+
+.status_done {
+  border: 1px solid rgba(0, 178, 42, 0.55);
+  color: #20e048;
+  background: rgba(0, 178, 42, 0.17);
+}
+
+.status_canceled {
+  border: 1px solid rgba(239, 68, 68, 0.55);
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.14);
 }
 
 .timeline {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 28px 0 26px;
+  gap: 8px;
+  margin: 32px 0 28px;
   position: relative;
 }
 
 .timeline::before {
   content: "";
   position: absolute;
-  top: 22px;
+  top: 24px;
   left: 12%;
   right: 12%;
   height: 2px;
-  background: linear-gradient(90deg, #ffd400 0 38%, rgba(255, 255, 255, 0.18) 38%);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.timeline::after {
+  content: "";
+  position: absolute;
+  top: 24px;
+  left: 12%;
+  height: 2px;
+  background: #ffd400;
+}
+
+.timeline[data-active-step="received"]::after {
+  width: 0;
+}
+
+.timeline[data-active-step="preparing"]::after {
+  width: 25.5%;
+}
+
+.timeline[data-active-step="route"]::after {
+  width: 51%;
+}
+
+.timeline[data-active-step="delivered"]::after {
+  width: 76%;
 }
 
 .stepDone,
@@ -116,15 +174,16 @@
   display: flex;
   align-items: center;
   flex-direction: column;
-  gap: 9px;
+  gap: 10px;
+  min-width: 0;
   text-align: center;
 }
 
 .stepDone span,
 .stepMuted span {
   display: grid;
-  width: 46px;
-  height: 46px;
+  width: 50px;
+  height: 50px;
   place-items: center;
   border-radius: 50%;
 }
@@ -149,28 +208,33 @@
 
 .stepDone strong,
 .stepMuted strong {
-  max-width: 92px;
-  font-size: 13px;
+  width: 100%;
+  max-width: 104px;
+  font-size: 14px;
   line-height: 1.2;
+  overflow-wrap: normal;
 }
 
 .items {
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
 .orderItem {
   display: grid;
-  grid-template-columns: 70px minmax(0, 1fr) auto;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
-  padding: 9px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.14);
 }
 
 .orderItem img {
-  width: 70px;
-  height: 70px;
+  width: 74px;
+  height: 74px;
   border-radius: 9px;
   object-fit: cover;
 }
@@ -178,7 +242,8 @@
 .orderItem strong {
   display: block;
   margin-bottom: 5px;
-  font-size: 17px;
+  font-size: 18px;
+  line-height: 1.15;
 }
 
 .orderItem p {
@@ -189,22 +254,25 @@
 }
 
 .orderItem > span {
-  align-self: start;
-  padding-top: 9px;
+  align-self: center;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .total {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 0;
+  gap: 16px;
+  padding: 22px 0 18px;
   font-size: 20px;
 }
 
 .total strong {
-  font-size: 25px;
+  font-size: clamp(24px, 6vw, 34px);
   font-weight: 900;
+  line-height: 1;
+  text-align: right;
 }
 
 .trackButton,
@@ -234,113 +302,33 @@
   color: #ffd400;
 }
 
-.recent {
-  margin-top: 28px;
-}
-
-.sectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.sectionHeader h2 {
-  margin: 0;
-  font-size: 22px;
-}
-
-.sectionHeader button {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  border: 0;
-  background: transparent;
-  color: #ffd400;
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.recentList {
-  overflow: hidden;
-}
-
-.recentItem {
+.emptyState {
   display: grid;
-  grid-template-columns: 88px minmax(0, 1fr) auto;
-  gap: 14px;
-  padding: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.recentItem:last-child {
-  border-bottom: 0;
-}
-
-.recentItem img {
-  width: 88px;
-  height: 82px;
-  border-radius: 9px;
-  object-fit: cover;
-}
-
-.recentInfo {
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.recentInfo strong {
-  font-size: 18px;
-}
-
-.recentInfo span {
-  color: rgba(255, 255, 255, 0.62);
-}
-
-.recentInfo b {
+  min-height: 150px;
+  place-items: center;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 255, 255, 0.72);
   font-size: 16px;
-}
-
-.recentActions {
-  display: flex;
-  align-items: flex-end;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.delivered {
-  padding: 7px 14px;
-  border: 1px solid rgba(0, 178, 42, 0.55);
-  border-radius: 9px;
-  background: rgba(0, 178, 42, 0.17);
-  color: #20e048;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.delivered::before {
-  content: "✓";
-  margin-right: 6px;
-}
-
-.recentActions button {
-  min-height: 38px;
-  padding: 0 14px;
-  border: 1px solid #ffd400;
-  border-radius: 10px;
-  background: transparent;
-  color: #ffd400;
-  font-weight: 800;
-  cursor: pointer;
+  font-weight: 700;
+  text-align: center;
 }
 
 @media (max-width: 520px) {
   .content {
-    padding: 22px 8px 24px;
+    padding: 24px 14px 28px;
+  }
+
+  .tabs {
+    margin-bottom: 22px;
+  }
+
+  .tabs button {
+    min-height: 48px;
+    padding: 0 6px;
+    font-size: 13px;
   }
 
   .currentOrder {
@@ -352,12 +340,36 @@
     flex-direction: column;
   }
 
-  .preparing {
+  .statusBadge {
     width: fit-content;
+  }
+
+  .timeline {
+    gap: 4px;
+    margin: 28px 0 24px;
+  }
+
+  .timeline::before,
+  .timeline::after {
+    top: 21px;
+  }
+
+  .stepDone span,
+  .stepMuted span {
+    width: 42px;
+    height: 42px;
+  }
+
+  .stepDone strong,
+  .stepMuted strong {
+    max-width: 78px;
+    font-size: 12px;
   }
 
   .orderItem {
     grid-template-columns: 62px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 10px;
   }
 
   .orderItem img {
@@ -365,14 +377,50 @@
     height: 62px;
   }
 
-  .recentItem {
-    grid-template-columns: 78px minmax(0, 1fr);
+  .orderItem strong {
+    font-size: 16px;
   }
 
-  .recentActions {
-    grid-column: 2;
-    align-items: flex-start;
-    flex-direction: row;
-    flex-wrap: wrap;
+  .orderItem p {
+    font-size: 13px;
+  }
+
+  .total {
+    font-size: 18px;
+  }
+
+}
+
+@media (max-width: 380px) {
+  .content {
+    padding-inline: 10px;
+  }
+
+  .tabs button {
+    font-size: 12px;
+  }
+
+  .currentOrder {
+    padding-inline: 12px;
+  }
+
+  .stepDone span,
+  .stepMuted span {
+    width: 38px;
+    height: 38px;
+  }
+
+  .stepDone strong,
+  .stepMuted strong {
+    font-size: 11px;
+  }
+
+  .orderItem {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+  }
+
+  .orderItem img {
+    width: 56px;
+    height: 56px;
   }
 }

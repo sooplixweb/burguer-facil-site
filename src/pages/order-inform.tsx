@@ -22,9 +22,10 @@ import Colors from "../themes/Colors";
 import { OrderController } from "../controllers/order.controller";
 import type { PaymentMethodEnum } from "../dtos/enums/payment-method.enum";
 import type { OrderResponseDto } from "../dtos/response/order-response.dto";
+import { formatOrderCode } from "../utils/formatOrderCode";
 
 type CartItem = {
-  id: number;
+  id: string;
   name: string;
   price: number;
   qty: number;
@@ -163,7 +164,7 @@ export default function OrderInform() {
   const items = useMemo(() => {
     if (order?.items?.length) {
       return order.items.map((item, index) => ({
-        id: Number(item.id || index + 1),
+        id: String(item.id || index + 1),
         name: item.name || "Item",
         price: parseMoney(item.unitPrice),
         qty: Number(item.quantity || 1),
@@ -176,7 +177,7 @@ export default function OrderInform() {
     const saved = readCartFallback();
     const source = incoming.length ? incoming : saved;
     return source.map((item: StoredCartItem, index: number) => ({
-      id: Number(item?.id ?? index + 1),
+      id: String(item?.id ?? index + 1),
       name: String(item?.name ?? "Item"),
       price: Number(item?.price ?? 0),
       qty: Number(item?.qty ?? 1),
@@ -204,7 +205,9 @@ export default function OrderInform() {
     : typeof state.total === "number"
     ? state.total
     : subtotal + deliveryFee;
-  const orderNumber = order?.code ? `#${order.code}` : state.orderNumber || "Nao informado";
+  const orderNumber = order?.code
+    ? formatOrderCode(order.code)
+    : state.orderNumber || "Nao informado";
   const orderPaymentMethod = order?.paymentMethod || state.payment;
   const orderPaymentLabel = paymentLabel(orderPaymentMethod);
   const PaymentStatusIcon = paymentIcon(orderPaymentMethod);

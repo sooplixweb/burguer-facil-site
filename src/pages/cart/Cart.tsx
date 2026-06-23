@@ -14,7 +14,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { useStoreStatus } from "../../hooks/useStoreStatus";
 
 type CartItem = {
-  id: number;
+  id: string;
   name: string;
   price: number;
   qty: number;
@@ -24,8 +24,8 @@ type CartItem = {
 };
 
 function makeMergeKey(p: any) {
-  const id = Number(p?.id);
-  if (Number.isFinite(id) && id > 0) return `id:${id}`;
+  const id = String(p?.id ?? "").trim();
+  if (id) return `id:${id}`;
   const name = String(p?.name ?? "").trim().toLowerCase();
   return `name:${name || "unknown"}`;
 }
@@ -51,8 +51,7 @@ export default function Cart() {
         if (!p) continue;
 
         const key = makeMergeKey(p);
-        const idNum = Number(p?.id);
-        const safeId = Number.isFinite(idNum) && idNum > 0 ? idNum : 0;
+        const safeId = String(p?.id ?? "").trim();
 
         const qty = Number(p?.qty ?? 1);
         const safeQty = Number.isFinite(qty) && qty > 0 ? qty : 1;
@@ -104,8 +103,8 @@ export default function Cart() {
   };
 
   const getKeyFromItem = (it: CartItem) => {
-    const id = Number(it.id);
-    if (Number.isFinite(id) && id > 0) return `id:${id}`;
+    const id = String(it.id ?? "").trim();
+    if (id) return `id:${id}`;
     return `name:${String(it.name ?? "").trim().toLowerCase()}`;
   };
 

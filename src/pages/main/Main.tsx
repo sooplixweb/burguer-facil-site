@@ -19,75 +19,7 @@ import { MainSkeleton } from "../../components/skeletons/main/MainSkeleton";
 import type { FoodResponseDto } from "../../dtos/Food-Response.Dto";
 import { toast, ToastContainer } from "react-toastify";
 import { useStoreStatus } from "../../hooks/useStoreStatus";
-
-const productsMock: FoodResponseDto[] = [
-  {
-    id: 1,
-    name: "Monster Bacon",
-    desc: "Hambúrguer artesanal 160g, cheddar, bacon crocante e molho especial.",
-    price: 32,
-    badge: "MAIS PEDIDO",
-    img: "https://images.unsplash.com/photo-1550547660-d9450f859349",
-    category: "Sanduíches",
-  },
-  {
-    id: 2,
-    name: "Classic Salad",
-    desc: "Pão brioche, blend 160g, alface, tomate e maionese.",
-    price: 28,
-    img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
-    category: "Sanduíches",
-  },
-  {
-    id: 3,
-    name: "Super Bacon",
-    desc: "Hambúrguer artesanal 160g, cheddar, bacon crocante e molho especial.",
-    price: 32,
-    badge: "MAIS PEDIDO",
-    img: "https://www.lecreuset.com.br/dw/image/v2/BDRT_PRD/on/demandware.static/-/Sites-le-creuset-br-master/default/dwa4a48e0b/images/hamburguer-skillet-lecreuset.png?sw=650&sh=650&sm=fit",
-    category: "Sanduíches",
-  },
-  {
-    id: 4,
-    name: "Classic Salad",
-    desc: "Pão brioche, blend 160g, alface, tomate e maionese.",
-    price: 28,
-    img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
-    category: "Sanduíches",
-  },
-  {
-    id: 7,
-    name: "Coca-Cola Lata",
-    price: 6,
-    desc: "Refrigerante 350ml",
-    img: "https://blog.somostera.com/hubfs/Blog_free_images/Uma%20lata%20de%20coca%20cola%20em%20cima%20da%20mesa.jpg",
-    category: "Bebidas",
-  },
-  {
-    id: 8,
-    name: "Coca-Cola 2L",
-    price: 6,
-    desc: "Garrafa 2L",
-    img: "https://felicitapizzaria.chefware.com.br/67/0/0/coca-cola-2-litros.jpg",
-    category: "Bebidas",
-  },
-  {
-    id: 9,
-    name: "Suco de Laranja",
-    price: 8,
-    desc: "Natural",
-    img: "https://www.sabornamesa.com.br/media/k2/items/cache/b018fd5ec8f1b90a1c8015900c2c2630_XL.jpg",
-    category: "Bebidas",
-  },
-  {
-    id: 10,
-    name: "Batata Frita",
-    price: 12,
-    desc: "Porção",
-    img: "https://swiftbr.vteximg.com.br/arquivos/ids/201377-768-768/622291-batata-airfryer-extra-croc-mccain_3.jpg?v=638657204471230000",
-    category: "Adicionais",
-  },
-];
+import { ProductService } from "../../service/product.service";
 
 const categoryIcons: Record<string, any> = {
   Sanduíches: HamburgerIcon,
@@ -100,6 +32,8 @@ export default function Main() {
   const [category, setCategory] = useState<string | null>(null);
   const navigation = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<FoodResponseDto[]>([]);
+  const [productsError, setProductsError] = useState("");
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [cartActived, setCartActivedCart] = useState(false);
@@ -137,11 +71,29 @@ export default function Main() {
       setCartActivedCart(false);
     }, 7000);
   }
-  const left = storeStatus.hoursToOpen;
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 1000);
-    return () => clearTimeout(t);
+    let active = true;
+
+    ProductService.findAll()
+      .then((data) => {
+        if (!active) return;
+        setProducts(data);
+        setProductsError("");
+      })
+      .catch(() => {
+        if (!active) return;
+        setProducts([]);
+        setProductsError("Não foi possível carregar os produtos agora.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
+  const left = storeStatus.hoursToOpen;
 
   useEffect(() => {
     if (storeStatus.loading) return;
@@ -169,24 +121,24 @@ export default function Main() {
   }, []);
 
   const categories = useMemo(() => {
-    return Array.from(new Set(productsMock.map((p) => p.category))).map(
+    return Array.from(new Set(products.map((p) => p.category))).map(
       (name) => ({
         name,
         icon: categoryIcons[name],
       })
     );
-  }, []);
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return productsMock;
-    return productsMock.filter((p) => {
+    if (!q) return products;
+    return products.filter((p) => {
       const name = p.name.toLowerCase();
       const desc = (p.desc || "").toLowerCase();
       const cat = p.category.toLowerCase();
       return name.includes(q) || desc.includes(q) || cat.includes(q);
     });
-  }, [search]);
+  }, [products, search]);
 
   const groupedProducts = useMemo(() => {
     return filteredProducts.reduce((acc, product) => {
@@ -199,7 +151,7 @@ export default function Main() {
     navigation(`/foodDetails?id=${item.id}`, {
       state: {
         item,
-        productsMock,
+        productsMock: products,
       },
     });
   };
@@ -355,12 +307,27 @@ export default function Main() {
               })}
             </div>
 
-            {Object.entries(
+            {productsError ? (
+              <div className={styles.emptyState}>
+                <h2>Produtos indisponíveis</h2>
+                <p>{productsError}</p>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className={styles.emptyState}>
+                <h2>Nenhum produto encontrado</h2>
+                <p>
+                  Cadastre produtos no admin para eles aparecerem aqui no
+                  cardápio.
+                </p>
+              </div>
+            ) : (
+              Object.entries(
               category === null
                 ? groupedProducts
                 : { [category]: groupedProducts[category] }
-            ).map(([cat, items]) => {
+            ).map(([cat, items = []]) => {
               const Icon = categoryIcons[cat];
+              if (!items.length || !Icon) return null;
               return (
                 <section key={cat} className={styles.section}>
                   <div className={styles.sectionHeader}>
@@ -386,6 +353,7 @@ export default function Main() {
                         name={item.name}
                         desc={item.desc}
                         price={item.price}
+                        originalPrice={item.originalPrice}
                         img={item.img}
                         badge={item.badge}
                         onDetails={() => goDetails(item)}
@@ -395,7 +363,8 @@ export default function Main() {
                   </div>
                 </section>
               );
-            })}
+            })
+            )}
           </div>
         )}
         <footer className={styles.footer}>

@@ -17,7 +17,7 @@ import Colors from "../../themes/Colors";
 type Addon = {
   id: string;
   name: string;
-  desc: string;
+  desc?: string;
   price: number;
 };
 
@@ -131,27 +131,19 @@ export default function FoodDetails() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  const addons: Addon[] = [
-    { id: "bacon", name: "Bacon Extra", desc: "Fatia extra crocante", price: 4 },
-    {
-      id: "cheddar",
-      name: "Queijo Cheddar",
-      desc: "Extra cremosidade",
-      price: 3,
-    },
-    {
-      id: "maionese",
-      name: "Maionese Verde",
-      desc: "Maionese da casa",
-      price: 2,
-    },
-    { id: "ovo", name: "Ovo Frito", desc: "Gema mole", price: 2.6 },
-  ];
-
   const drinkOptions: DrinkOption[] = [
     { id: "gelado", name: "Gelado" },
     { id: "natural", name: "Natural" },
   ];
+
+  const productAddons: Addon[] = useMemo(() => {
+    return (products?.addons || []).map((addon) => ({
+      id: addon.id,
+      name: addon.name,
+      desc: addon.desc,
+      price: addon.price,
+    }));
+  }, [products?.addons]);
 
   const goDetails = (item: FoodResponseDto) => {
     setProductStack((prev) => {
@@ -195,10 +187,10 @@ export default function FoodDetails() {
   };
 
   const selectedAddonList = useMemo(() => {
-    return addons
+    return productAddons
       .filter((a) => selectedAddons[a.id])
       .map((a) => ({ id: a.id, name: a.name, price: a.price }));
-  }, [selectedAddons]);
+  }, [productAddons, selectedAddons]);
 
   const addonsTotal = useMemo(() => {
     return selectedAddonList.reduce((acc, a) => acc + a.price, 0);
@@ -236,7 +228,7 @@ export default function FoodDetails() {
   const checkoutItem = useMemo(() => {
     if (!cartItem) return null;
     return {
-      id: Number((cartItem as any).id),
+      id: String((cartItem as any).id || ""),
       name: String((cartItem as any).name || ""),
       price: Number((cartItem as any).price || 0),
       qty: Number((cartItem as any).qty || 1),
@@ -330,7 +322,7 @@ export default function FoodDetails() {
             <p className={styles.desc}>{products.desc}</p>
           </div>
 
-          {products.category === "Sanduíches" && (
+          {products.category === "Sanduíches" && productAddons.length > 0 && (
             <div className={styles.section}>
               <div className={styles.sectionHead}>
                 <h2 className={styles.sectionTitle}>Adicionais</h2>
@@ -338,7 +330,7 @@ export default function FoodDetails() {
               </div>
 
               <div className={styles.addons}>
-                {addons.map((a) => {
+                {productAddons.map((a) => {
                   const active = !!selectedAddons[a.id];
                   return (
                     <button
@@ -361,7 +353,9 @@ export default function FoodDetails() {
 
                       <span className={styles.addonInfo}>
                         <span className={styles.addonName}>{a.name}</span>
-                        <span className={styles.addonDesc}>{a.desc}</span>
+                        {a.desc ? (
+                          <span className={styles.addonDesc}>{a.desc}</span>
+                        ) : null}
                       </span>
 
                       <span className={styles.addonPrice}>
@@ -484,6 +478,7 @@ export default function FoodDetails() {
                 name={c.name}
                 desc={c.desc}
                 price={c.price}
+                originalPrice={c.originalPrice}
                 onDetails={() => goDetails(c)}
                 functions={() => activedCart()}
               />
