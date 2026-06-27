@@ -1,29 +1,21 @@
+import axios from "axios";
+
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ||
-  // "http://localhost:3000";
-"https://amburgueria-api.onrender.com";
+  // import.meta.env.VITE_API_URL ||  "https://amburgueria-api.onrender.com";
+  "http://localhost:3000";
 
-type RequestOptions = Omit<RequestInit, "body"> & {
-  body?: unknown;
-};
+const api = axios.create({
+  baseURL: API_BASE_URL,
+});
 
-export async function apiRequest<T>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
-  });
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
 
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Erro ao comunicar com a API");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
 
-  return response.json() as Promise<T>;
-}
+  return config;
+});
+
+export default api;

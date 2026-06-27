@@ -1,17 +1,25 @@
 .header {
   width: 100%;
-  padding: 20px 20px 14px;
-
+  padding: 20px 20px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .headerContent {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   width: 100%;
   align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.signupText {
+  margin: 32px 0 0;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.72);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .brand {
@@ -36,18 +44,56 @@
   font-size: 20px;
   font-weight: 800;
   line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.authActions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.authButton {
+  min-width: 108px;
+  height: 40px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: #f4f4f4;
+  color: #111;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    filter 140ms ease,
+    background 140ms ease;
+}
+
+.authButton:active {
+  transform: translateY(1px);
+}
+
+.authPrimary {
+  border-color: #ffd400;
+  background: #ffd400;
 }
 
 .cartButton {
   position: relative;
   display: grid;
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
@@ -75,9 +121,10 @@
   width: 100%;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  min-height: 54px;
+  padding: 12px 16px;
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 18px;
+  border-radius: 20px;
   background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.72);
 }
@@ -109,12 +156,78 @@
   cursor: pointer;
 }
 
-@media (max-width: 420px) {
+@media (max-width: 640px) {
   .header {
-    padding: 18px 16px 14px;
+    padding: 18px 18px 16px;
+  }
+
+  .headerContent {
+    grid-template-columns: minmax(0, 1fr) 48px;
+    grid-template-areas:
+      "brand cart"
+      "auth auth";
+    gap: 14px 12px;
+  }
+
+  .brand {
+    grid-area: brand;
+  }
+
+  .authActions {
+    grid-area: auth;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 10px;
+  }
+
+  .authButton {
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    padding: 0 12px;
+  }
+
+  .cartButton {
+    grid-area: cart;
+    justify-self: end;
+  }
+
+  .searchInputWrap {
+    min-height: 54px;
+    border-radius: 18px;
   }
 
   .brandName {
-    font-size: 18px;
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 360px) {
+  .header {
+    padding: 16px 14px 14px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brandLogo {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .brandName {
+    font-size: 17px;
+  }
+
+  .authButton {
+    height: 40px;
+    font-size: 13px;
+  }
+
+  .searchInput {
+    font-size: 13px;
   }
 }

@@ -13,10 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import whatsapp from "../../assets/whatsapp.png";
-import whatsappred from "../../assets/whatsappred.png";
 import { Header } from "../../components/Header/Header";
-
 import { MainSkeleton } from "../../components/skeletons/main/MainSkeleton";
 import type { FoodResponseDto } from "../../dtos/Food-Response.Dto";
 import { toast, ToastContainer } from "react-toastify";
@@ -49,31 +46,6 @@ export default function Main() {
   const [cartActived, setCartActivedCart] = useState(false);
   const storeStatus = useStoreStatus();
   const openNow = storeStatus.openNow;
-
-  const handleWatsappClick = () => {
-    if (storeStatus.loading) {
-      toast.info("Verificando horário de funcionamento...", {
-        autoClose: 1800,
-      });
-      return;
-    }
-
-    if (openNow) {
-      const phone = "5564999663524";
-      const text = "Olá! 👋 Vim pelo site e gostaria de fazer um pedido.";
-      window.open(
-        `https://wa.me/${phone}?text=${encodeURIComponent(text)}`,
-        "_blank",
-        "noopener,noreferrer"
-      );
-    } else {
-      const left = storeStatus.hoursToOpen;
-      toast.error(
-        `Fechado, abrimos em ${left} ${left === 1 ? "hora" : "horas"}`,
-        { autoClose: 2500 }
-      );
-    }
-  };
 
   function activedCart() {
     setCartActivedCart(true);
@@ -118,13 +90,13 @@ export default function Main() {
           const left = storeStatus.hoursToOpen;
           toast.error(
             `Fechado, abrimos em ${left} ${left === 1 ? "hora" : "horas"}`,
-            { autoClose: 2500 }
+            { autoClose: 2500 },
           );
         }
         localStorage.setItem(KEY, "1");
       }
     } catch {
-      // Ignore storage access errors.
+      console.log("error")
     }
   }, [openNow, storeStatus.hoursToOpen, storeStatus.loading]);
 
@@ -133,12 +105,10 @@ export default function Main() {
   }, []);
 
   const categories = useMemo(() => {
-    return Array.from(new Set(products.map((p) => p.category))).map(
-      (name) => ({
-        name,
-        icon: categoryIcons[name],
-      })
-    );
+    return Array.from(new Set(products.map((p) => p.category))).map((name) => ({
+      name,
+      icon: categoryIcons[name],
+    }));
   }, [products]);
 
   const filteredProducts = useMemo(() => {
@@ -153,10 +123,13 @@ export default function Main() {
   }, [products, search]);
 
   const groupedProducts = useMemo(() => {
-    return filteredProducts.reduce((acc, product) => {
-      (acc[product.category] ||= []).push(product);
-      return acc;
-    }, {} as Record<string, FoodResponseDto[]>);
+    return filteredProducts.reduce(
+      (acc, product) => {
+        (acc[product.category] ||= []).push(product);
+        return acc;
+      },
+      {} as Record<string, FoodResponseDto[]>,
+    );
   }, [filteredProducts]);
 
   const goDetails = (item: FoodResponseDto) => {
@@ -205,24 +178,6 @@ export default function Main() {
             searchRef.current?.blur();
           }}
         />
-
-        <div className={styles.whatsappFloat} onClick={handleWatsappClick}>
-          {openNow ? (
-            <img src={openNow ? whatsapp : whatsappred} alt="WhatsApp" />
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <img src={openNow ? whatsapp : whatsappred} alt="WhatsApp" />
-              <span style={{ fontWeight: "500" }}> Fechado</span>
-            </div>
-          )}
-        </div>
 
         {loading ? (
           <div
@@ -334,48 +289,50 @@ export default function Main() {
               </div>
             ) : (
               Object.entries(
-              category === null
-                ? groupedProducts
-                : { [category]: groupedProducts[category] }
-            ).map(([cat, items = []]) => {
-              const Icon = categoryIcons[cat];
-              if (!items.length || !Icon) return null;
-              return (
-                <section key={cat} className={styles.section}>
-                  <div className={styles.sectionHeader}>
-                    <div className={styles.sectionLeft}>
-                      <Icon size={20} />
-                      <h2 className={styles.sectionTitle}>{cat}</h2>
-                    </div>
-                    <span className={styles.sectionCount}>
-                      <span className={styles.sectionQuant}>
-                        {items.length}
+                category === null
+                  ? groupedProducts
+                  : { [category]: groupedProducts[category] },
+              ).map(([cat, items = []]) => {
+                const Icon = categoryIcons[cat];
+                if (!items.length || !Icon) return null;
+                return (
+                  <section key={cat} className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                      <div className={styles.sectionLeft}>
+                        <Icon size={20} />
+                        <h2 className={styles.sectionTitle}>{cat}</h2>
+                      </div>
+                      <span className={styles.sectionCount}>
+                        <span className={styles.sectionQuant}>
+                          {items.length}
+                        </span>
+                        <span> opções</span>
                       </span>
-                      <span> opções</span>
-                    </span>
-                  </div>
+                    </div>
 
-                  <div
-                    className={cat === "Bebidas" ? styles.grid3 : styles.grid4}
-                  >
-                    {items.map((item) => (
-                      <FoodCard
-                        key={item.id}
-                        id={item.id}
-                        name={item.name}
-                        desc={item.desc}
-                        price={item.price}
-                        originalPrice={item.originalPrice}
-                        img={item.img}
-                        badge={item.badge}
-                        onDetails={() => goDetails(item)}
-                        functions={() => activedCart()}
-                      />
-                    ))}
-                  </div>
-                </section>
-              );
-            })
+                    <div
+                      className={
+                        cat === "Bebidas" ? styles.grid3 : styles.grid4
+                      }
+                    >
+                      {items.map((item) => (
+                        <FoodCard
+                          key={item.id}
+                          id={item.id}
+                          name={item.name}
+                          desc={item.desc}
+                          price={item.price}
+                          originalPrice={item.originalPrice}
+                          img={item.img}
+                          badge={item.badge}
+                          onDetails={() => goDetails(item)}
+                          functions={() => activedCart()}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })
             )}
           </div>
         )}

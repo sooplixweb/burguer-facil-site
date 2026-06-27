@@ -10,12 +10,16 @@ import { DashboardLayout } from "./components/layouts/DashboardLayout";
 import Profile from "./pages/profile/Profile";
 import Orders from "./pages/orders/Orders";
 import Favorites from "./pages/favorites/Favorites";
+import Login from "./pages/login/login";
+import Register from "./pages/register/register";
 
 function App() {
   return (
     <>
       <ScrollToTop />
       <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/" element={<DashboardLayout />}>
           <Route index element={<Navigate to="/main" replace />} />
           <Route path="main" element={<Main />} />

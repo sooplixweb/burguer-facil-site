@@ -1,5 +1,6 @@
 import type { FoodResponseDto } from "../dtos/Food-Response.Dto";
-import { API_BASE_URL, apiRequest } from "./api";
+import api, { API_BASE_URL } from "./api";
+
 
 type ProductImageResponse = {
   id: string;
@@ -82,12 +83,12 @@ function mapProduct(product: ProductResponse): FoodResponseDto {
 
 export const ProductService = {
   findAll: async (): Promise<FoodResponseDto[]> => {
-    const products = await apiRequest<ProductResponse[]>("/products");
-    return products.map(mapProduct);
+    const response = await api.get<ProductResponse[]>("/products");
+    return response.data.map(mapProduct);
   },
 
   findOne: async (id: string): Promise<FoodResponseDto> => {
-    const product = await apiRequest<ProductResponse>(`/products/${id}`);
-    return mapProduct(product);
+    const response = await api.get<ProductResponse>(`/products/${id}`);
+    return mapProduct(response.data);
   },
 };
