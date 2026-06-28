@@ -127,6 +127,7 @@ export default function Profile() {
   function confirmLogout() {
     contextLogout();
     setShowLogoutModal(false);
+    navigate("/login");
   }
 
   const settingsOptions = [

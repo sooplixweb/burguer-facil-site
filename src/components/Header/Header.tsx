@@ -203,13 +203,12 @@ export function Header({
   const navigate = useNavigate();
   const [storedCartCount, setStoredCartCount] = useState(getCartQuantity);
   const badgeCount = cartCount ?? storedCartCount;
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return Boolean(localStorage.getItem("token"));
+  });
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      setIsLogin(true);
-    }
     const updateCartCount = () => setStoredCartCount(getCartQuantity());
     const handleStorage = (event: StorageEvent) => {
       if (event.key === CART_STORAGE_KEY) updateCartCount();
