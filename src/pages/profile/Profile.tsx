@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import styles from "./Profile.module.css";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { UserService } from "../../service/user.service";
 import type { UserResponseDto } from "../../dtos/response/user-response.dto";
 import { useAuth } from "../../contexts/AuthContext";
@@ -62,11 +61,15 @@ export default function Profile() {
   const [user, setUser] = useState<UserResponseDto>();
   const [activeOption, setActiveOption] = useState<string | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState<boolean>(false);
+  const [reloading, setReloading] = useState<boolean>(false);
   const hasLoadedUser = useRef(false);
   const optionEffectTimeoutRef = useRef<number | null>(null);
   const optionActionTimeoutRef = useRef<number | null>(null);
   const { logout: contextLogout } = useAuth();
-  const navigate = useNavigate();
+
+  function invert() {
+    setReloading((a) => !a);
+  }
 
   useEffect(() => {
     if (hasLoadedUser.current) {
@@ -77,7 +80,7 @@ export default function Profile() {
     const storedUserId = localStorage.getItem("userId");
 
     if (!storedUserId) {
-      navigate("/login");
+      invert();
       return;
     }
 
@@ -91,7 +94,7 @@ export default function Profile() {
       }
     };
     loadUser();
-  }, [navigate]);
+  }, [reloading]);
 
   useEffect(() => {
     return () => {
@@ -130,7 +133,6 @@ export default function Profile() {
   function confirmLogout() {
     contextLogout();
     setShowLogoutModal(false);
-    navigate("/login");
   }
 
   const settingsOptions = [

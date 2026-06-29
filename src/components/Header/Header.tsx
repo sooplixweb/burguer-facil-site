@@ -7,6 +7,7 @@ import {
   CART_UPDATED_EVENT,
   getCartQuantity,
 } from "../../utils/cartStorage";
+import { useAuth } from "../../contexts/AuthContext";
 
 type HeaderProps = {
   search?: string;
@@ -201,12 +202,10 @@ export function Header({
 }: HeaderProps) {
   const isDesktopHeader = useDesktopHeader();
   const navigate = useNavigate();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [storedCartCount, setStoredCartCount] = useState(getCartQuantity);
   const badgeCount = cartCount ?? storedCartCount;
-  const [isLogin] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return Boolean(localStorage.getItem("token"));
-  });
+  const showAuthActions = !authLoading && !isAuthenticated;
 
   useEffect(() => {
     const updateCartCount = () => setStoredCartCount(getCartQuantity());
@@ -244,7 +243,7 @@ export function Header({
           </span>
         </div>
 
-        {!isLogin && (
+        {showAuthActions && (
           <div
             className={styles.authActions}
             style={isDesktopHeader ? desktopAuthActionsStyle : authActionsStyle}
