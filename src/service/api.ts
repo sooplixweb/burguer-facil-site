@@ -1,8 +1,9 @@
 import axios from "axios";
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||  "https://amburgueria-api.onrender.com";
-  // "http://localhost:3000";
+  import.meta.env.VITE_API_URL ||
+  "https://burguer-facil-api-production.up.railway.app";
+// "http://localhost:3000";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
