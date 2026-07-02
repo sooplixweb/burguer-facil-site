@@ -191,9 +191,7 @@ export default function Login() {
               {isSubmitting ? (
                 <span className={styles.loadingSpinner} aria-hidden="true" />
               ) : (
-                <>
-                  <span>Entrar</span>
-                </>
+                <span>Entrar</span>
               )}
             </button>
           </form>
