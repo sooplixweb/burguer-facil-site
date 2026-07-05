@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties, type RefObject } from "react";
-import { Search, ShoppingCart, X } from "lucide-react";
+import { MessageCircle, Search, ShoppingCart, X } from "lucide-react";
 import styles from "./Header.module.css";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   CART_STORAGE_KEY,
   CART_UPDATED_EVENT,
@@ -28,8 +28,8 @@ const headerStyle: CSSProperties = {
 
 const headerContentStyle: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) 44px",
-  gridTemplateAreas: '"brand cart" "auth auth"',
+  gridTemplateColumns: "minmax(0, 1fr) 96px",
+  gridTemplateAreas: '"brand actions" "auth auth"',
   alignItems: "center",
   gap: "10px 8px",
   width: "100%",
@@ -38,8 +38,8 @@ const headerContentStyle: CSSProperties = {
 
 const desktopHeaderContentStyle: CSSProperties = {
   ...headerContentStyle,
-  gridTemplateColumns: "minmax(0, 1fr) auto 44px",
-  gridTemplateAreas: '"brand auth cart"',
+  gridTemplateColumns: "minmax(0, 1fr) auto 96px",
+  gridTemplateAreas: '"brand auth actions"',
 };
 
 const brandStyle: CSSProperties = {
@@ -104,8 +104,15 @@ const authPrimaryStyle: CSSProperties = {
   background: "#ffd400",
 };
 
-const cartButtonStyle: CSSProperties = {
-  gridArea: "cart",
+const headerActionsStyle: CSSProperties = {
+  gridArea: "actions",
+  justifySelf: "end",
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+};
+
+const headerIconButtonStyle: CSSProperties = {
   justifySelf: "end",
   position: "relative",
   display: "grid",
@@ -117,6 +124,17 @@ const cartButtonStyle: CSSProperties = {
   background: "rgba(255, 255, 255, 0.05)",
   color: "rgba(255, 255, 255, 0.9)",
   cursor: "pointer",
+};
+
+const messageButtonStyle: CSSProperties = {
+  ...headerIconButtonStyle,
+  borderColor: "rgba(255, 212, 0, 0.32)",
+  background: "rgba(255, 212, 0, 0.08)",
+  color: "#ffd400",
+};
+
+const cartButtonStyle: CSSProperties = {
+  ...headerIconButtonStyle,
 };
 
 const cartBadgeStyle: CSSProperties = {
@@ -202,6 +220,7 @@ export function Header({
 }: HeaderProps) {
   const isDesktopHeader = useDesktopHeader();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [storedCartCount, setStoredCartCount] = useState(getCartQuantity);
   const badgeCount = cartCount ?? storedCartCount;
@@ -267,20 +286,36 @@ export function Header({
           </div>
         )}
 
-        <button
-          className={styles.cartButton}
-          style={cartButtonStyle}
-          type="button"
-          onClick={onCartClick}
-          aria-label="Abrir carrinho"
-        >
-          <ShoppingCart size={22} />
-          {badgeCount > 0 && (
-            <span className={styles.cartBadge} style={cartBadgeStyle}>
-              {badgeCount}
-            </span>
-          )}
-        </button>
+        <div className={styles.headerActions} style={headerActionsStyle}>
+          <button
+            className={styles.messageButton}
+            style={messageButtonStyle}
+            type="button"
+            onClick={() =>
+              navigate("/mensagens", {
+                state: { returnTo: `${location.pathname}${location.search}` },
+              })
+            }
+            aria-label="Abrir mensagens"
+          >
+            <MessageCircle size={22} />
+          </button>
+
+          <button
+            className={styles.cartButton}
+            style={cartButtonStyle}
+            type="button"
+            onClick={onCartClick}
+            aria-label="Abrir carrinho"
+          >
+            <ShoppingCart size={22} />
+            {badgeCount > 0 && (
+              <span className={styles.cartBadge} style={cartBadgeStyle}>
+                {badgeCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {showSearch && (

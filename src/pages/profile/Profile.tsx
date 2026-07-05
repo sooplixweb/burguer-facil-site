@@ -10,6 +10,7 @@ import {
   Home,
   LogOut,
   MapPin,
+  MessageCircle,
   Pencil,
   Plus,
   Save,
@@ -21,13 +22,14 @@ import {
 } from "lucide-react";
 import styles from "./Profile.module.css";
 import { useEffect, useRef, useState } from "react";
+import ConfirmationModal from "../../components/ConfirmationModal/ConfirmationModal";
 import { UserService } from "../../service/user.service";
 import type { UserResponseDto } from "../../dtos/response/user-response.dto";
 import { useAuth } from "../../contexts/AuthContext";
 import { AddressService } from "../../service/address.service";
 import type { AddressResponseDto } from "../../dtos/response/address-response.dto";
 import { getRequestErrorMessage } from "../../utils/getRequestErrorMessage";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const profileActions = [
   {
@@ -39,6 +41,11 @@ const profileActions = [
     title: "Endereços",
     subtitle: "Gerenciar",
     icon: MapPin,
+  },
+  {
+    title: "Mensagens",
+    subtitle: "Falar com a loja",
+    icon: MessageCircle,
   },
   {
     title: "Cupons",
@@ -125,6 +132,7 @@ function formatAddressDetails(address: AddressResponseDto) {
 
 export default function Profile() {
   const location = useLocation();
+  const navigate = useNavigate();
   const locationState = (location.state || {}) as { openAddresses?: boolean };
   const [user, setUser] = useState<UserResponseDto>();
   const [activeOption, setActiveOption] = useState<string | null>(null);
@@ -677,6 +685,16 @@ export default function Profile() {
                     onClick={() => {
                       if (item.title === "Endereços") {
                         setShowAddressScreen(true);
+                        return;
+                      }
+
+                      if (item.title === "Histórico") {
+                        navigate("/pedidos");
+                        return;
+                      }
+
+                      if (item.title === "Mensagens") {
+                        navigate("/mensagens", { state: { returnTo: "/perfil" } });
                       }
                     }}
                   >
@@ -752,42 +770,14 @@ export default function Profile() {
       </main>
 
       {showLogoutModal && (
-        <div
-          className={styles.modalOverlay}
-          role="presentation"
-          onClick={() => setShowLogoutModal(false)}
-        >
-          <section
-            className={styles.logoutModal}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="logout-modal-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <span className={styles.modalIcon} aria-hidden="true">
-              <LogOut size={26} />
-            </span>
-            <h2 id="logout-modal-title">Deseja sair?</h2>
-            <p>Sua sessão será encerrada e você voltará para o login.</p>
-
-            <div className={styles.modalActions}>
-              <button
-                className={styles.modalCancel}
-                type="button"
-                onClick={() => setShowLogoutModal(false)}
-              >
-                Cancelar
-              </button>
-              <button
-                className={styles.modalConfirm}
-                type="button"
-                onClick={confirmLogout}
-              >
-                Sair
-              </button>
-            </div>
-          </section>
-        </div>
+        <ConfirmationModal
+          icon={<LogOut size={26} />}
+          title="Deseja sair?"
+          description="Sua sessão será encerrada e você voltará para o login."
+          confirmLabel="Sair"
+          onCancel={() => setShowLogoutModal(false)}
+          onConfirm={confirmLogout}
+        />
       )}
     </div>
   );

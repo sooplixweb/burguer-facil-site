@@ -1,0 +1,366 @@
+.screen {
+  min-height: 100%;
+  color: #fff;
+}
+
+.content {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 24px 18px 34px;
+}
+
+.detailContent {
+  display: flex;
+  min-height: calc(100dvh - 180px);
+  padding: 0 18px;
+  flex-direction: column;
+}
+
+.pageHeader {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pageBackButton {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  margin-top: 1px;
+  border: 0;
+  background: transparent;
+  color: #ffd400;
+  cursor: pointer;
+}
+
+.pageHeader h1 {
+  margin: 0 0 4px;
+  font-size: clamp(24px, 6.4vw, 30px);
+  line-height: 1.05;
+  font-weight: 900;
+}
+
+.pageHeader p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.listShell,
+.detailShell {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background:
+    radial-gradient(
+      320px 190px at 70% 0%,
+      rgba(255, 255, 255, 0.06),
+      transparent 68%
+    ),
+    rgba(255, 255, 255, 0.035);
+}
+
+.listShell {
+  display: flex;
+  flex-direction: column;
+}
+
+.threadButton {
+  position: relative;
+  display: grid;
+  width: 100%;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 14px 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.threadButton:last-child {
+  border-bottom: 0;
+}
+
+.threadButton:hover,
+.threadButtonActive {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.threadButtonActive {
+  box-shadow: inset 4px 0 0 #ffd400;
+}
+
+.threadAvatar {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: #ffd400;
+  color: #111;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.threadInfo {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.threadTop {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.threadTop strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.threadTop small {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.threadPreview {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unreadBadge {
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #ffd400;
+  color: #111;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.detailShell {
+  display: grid;
+  width: 100%;
+  height: min(680px, calc(100dvh - 180px));
+  min-height: 520px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  margin: 0 auto;
+}
+
+.detailTop {
+  display: grid;
+  grid-template-columns: 34px 42px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 10px;
+  min-height: 72px;
+  padding: 12px 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.detailTop .threadAvatar {
+  width: 42px;
+  height: 42px;
+  flex-basis: 42px;
+}
+
+.backButton,
+.callButton {
+  display: grid;
+  place-items: center;
+  color: #ffd400;
+  cursor: pointer;
+}
+
+.backButton {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+}
+
+.callButton {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 212, 0, 0.34);
+  border-radius: 12px;
+  background: rgba(255, 212, 0, 0.08);
+}
+
+.detailTitle {
+  min-width: 0;
+}
+
+.detailTitle h1 {
+  overflow: hidden;
+  margin: 0 0 6px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.12;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detailTitle span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.messageList {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding: 16px 14px 18px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.messageBubble {
+  width: fit-content;
+  max-width: 80%;
+  padding: 12px 13px 10px;
+  border-radius: 9px;
+}
+
+.messageBubble p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.36;
+}
+
+.messageBubble span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  width: 100%;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.storeMessage {
+  align-self: flex-start;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-left-radius: 5px;
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+.storeMessage span {
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.customerMessage {
+  align-self: flex-end;
+  border-top-right-radius: 5px;
+  background: #ffd400;
+  color: #111;
+}
+
+.customerMessage span {
+  color: rgba(17, 17, 17, 0.64);
+}
+
+.composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 46px;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.composer input {
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  outline: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.composer input::placeholder {
+  color: rgba(255, 255, 255, 0.44);
+}
+
+.composer button {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 0;
+  border-radius: 12px;
+  background: #ffd400;
+  color: #111;
+  cursor: pointer;
+}
+
+@media (max-width: 430px) {
+  .content {
+    padding: 18px 12px 26px;
+  }
+
+  .pageHeader {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .detailContent {
+    min-height: calc(100dvh - 132px);
+    padding: 0 10px;
+  }
+
+  .detailShell {
+    height: calc(100dvh - 132px);
+    min-height: 500px;
+  }
+
+  .messageBubble {
+    max-width: 84%;
+  }
+}

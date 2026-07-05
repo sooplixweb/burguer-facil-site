@@ -85,6 +85,14 @@
   background: #ffd400;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.messageButton,
 .cartButton {
   position: relative;
   display: grid;
@@ -97,6 +105,12 @@
   background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
+}
+
+.messageButton {
+  border-color: rgba(255, 212, 0, 0.32);
+  background: rgba(255, 212, 0, 0.08);
+  color: #ffd400;
 }
 
 .cartBadge {
@@ -162,9 +176,9 @@
   }
 
   .headerContent {
-    grid-template-columns: minmax(0, 1fr) 48px;
+    grid-template-columns: minmax(0, 1fr) 104px;
     grid-template-areas:
-      "brand cart"
+      "brand actions"
       "auth auth";
     gap: 14px 12px;
   }
@@ -188,8 +202,8 @@
     padding: 0 12px;
   }
 
-  .cartButton {
-    grid-area: cart;
+  .headerActions {
+    grid-area: actions;
     justify-self: end;
   }
 

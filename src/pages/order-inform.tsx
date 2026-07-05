@@ -19,6 +19,7 @@ import {
   Send,
   XCircle,
 } from "lucide-react";
+import ConfirmationModal from "../components/ConfirmationModal/ConfirmationModal";
 import Colors from "../themes/Colors";
 import { OrderController } from "../controllers/order.controller";
 import type { PaymentMethodEnum } from "../dtos/enums/payment-method.enum";
@@ -57,6 +58,13 @@ type OrderState = {
 type StoredCartItem = Partial<CartItem> & {
   desc?: string;
   img?: string;
+};
+
+type MiniChatMessage = {
+  id: string;
+  from: "store" | "customer";
+  text: string;
+  time: string;
 };
 
 function useIsMobile() {
@@ -120,6 +128,13 @@ function formatTime(value?: string) {
   });
 }
 
+function formatCurrentChatTime() {
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date());
+}
+
 function readCartFallback() {
   try {
     const raw = localStorage.getItem("food");
@@ -138,7 +153,18 @@ export default function OrderInform() {
   const state = (location.state || {}) as OrderState;
   const [order, setOrder] = useState<OrderResponseDto | null>(null);
   const [isCanceling, setIsCanceling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [miniChatDraft, setMiniChatDraft] = useState("");
+  const [miniChatMessages, setMiniChatMessages] = useState<MiniChatMessage[]>([
+    {
+      id: "store-welcome",
+      from: "store",
+      text: "Olá! Se precisar falar com a loja durante o pedido, envie por aqui.",
+      time: formatCurrentChatTime(),
+    },
+  ]);
   const previousStatusRef = useRef<string | null>(null);
+  const miniChatRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!state.orderId && !state.orderNumber) return;
@@ -264,6 +290,7 @@ export default function OrderInform() {
   const progressPercent = (activeStatus / (statuses.length - 1)) * 75;
   const isCanceled = order?.status === "CANCELED";
   const canCancel = !!order && order.status !== "DELIVERED" && !isCanceled;
+  const isMiniChatReadOnly = order?.status === "DELIVERED" || isCanceled;
   const pageTitle = isCanceled
     ? "Pedido cancelado"
     : order?.status === "DELIVERED"
@@ -273,11 +300,14 @@ export default function OrderInform() {
     ? "Este pedido foi cancelado."
     : "Acompanhe o status do seu pedido em tempo real.";
 
+  useEffect(() => {
+    if (!canCancel && showCancelModal) {
+      setShowCancelModal(false);
+    }
+  }, [canCancel, showCancelModal]);
+
   async function handleCancelOrder() {
     if (!order || !canCancel || isCanceling) return;
-
-    const shouldCancel = window.confirm("Deseja cancelar este pedido?");
-    if (!shouldCancel) return;
 
     setIsCanceling(true);
 
@@ -285,11 +315,30 @@ export default function OrderInform() {
       const updatedOrder = await OrderController.cancel(order.id);
       setOrder(updatedOrder);
       previousStatusRef.current = updatedOrder.status;
+      setShowCancelModal(false);
     } catch {
       window.alert("Não foi possível cancelar o pedido.");
     } finally {
       setIsCanceling(false);
     }
+  }
+
+  function handleMiniChatSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const text = miniChatDraft.trim();
+    if (!text || isMiniChatReadOnly) return;
+
+    setMiniChatMessages((current) => [
+      ...current,
+      {
+        id: `customer-${Date.now()}`,
+        from: "customer",
+        text,
+        time: formatCurrentChatTime(),
+      },
+    ]);
+    setMiniChatDraft("");
   }
 
   const s = {
@@ -512,6 +561,102 @@ export default function OrderInform() {
       fontWeight: 900,
       whiteSpace: "nowrap",
     } as React.CSSProperties,
+    miniChatCard: {
+      ...({
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.018))",
+        border: "1px solid rgba(255,255,255,.14)",
+        borderRadius: isMobile ? 6 : 8,
+        boxShadow: "0 8px 20px rgba(0,0,0,.22)",
+      } as React.CSSProperties),
+      padding: isMobile ? 8 : 13,
+      marginTop: isMobile ? 8 : 12,
+    } as React.CSSProperties,
+    miniChatHeader: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: isMobile ? 8 : 12,
+      marginBottom: isMobile ? 8 : 10,
+    } as React.CSSProperties,
+    miniChatStatus: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: isMobile ? 4 : 6,
+      flex: "0 0 auto",
+      minHeight: isMobile ? 22 : 26,
+      padding: isMobile ? "0 7px" : "0 10px",
+      border: isMiniChatReadOnly
+        ? "1px solid rgba(255,255,255,.16)"
+        : "1px solid rgba(46,204,113,.38)",
+      borderRadius: 999,
+      background: isMiniChatReadOnly
+        ? "rgba(255,255,255,.05)"
+        : "rgba(46,204,113,.1)",
+      color: isMiniChatReadOnly ? "rgba(255,255,255,.58)" : green,
+      fontSize: isMobile ? 7 : 10,
+      fontWeight: 900,
+      whiteSpace: "nowrap",
+    } as React.CSSProperties,
+    miniChatMessages: {
+      display: "flex",
+      flexDirection: "column",
+      gap: isMobile ? 7 : 9,
+      maxHeight: isMobile ? 148 : 190,
+      overflowY: "auto",
+      padding: isMobile ? "8px 0 9px" : "10px 2px 12px",
+      borderTop: "1px solid rgba(255,255,255,.08)",
+    } as React.CSSProperties,
+    miniChatBubble: {
+      width: "fit-content",
+      maxWidth: isMobile ? "86%" : "72%",
+      padding: isMobile ? "8px 9px 6px" : "10px 11px 7px",
+      borderRadius: isMobile ? 7 : 9,
+      fontSize: isMobile ? 8 : 11,
+      fontWeight: 800,
+      lineHeight: 1.35,
+    } as React.CSSProperties,
+    miniChatTime: {
+      display: "block",
+      marginTop: isMobile ? 4 : 5,
+      textAlign: "right",
+      fontSize: isMobile ? 6 : 9,
+      fontWeight: 900,
+      opacity: 0.58,
+    } as React.CSSProperties,
+    miniChatForm: {
+      display: "grid",
+      gridTemplateColumns: isMiniChatReadOnly
+        ? "minmax(0, 1fr)"
+        : "minmax(0, 1fr) auto",
+      gap: isMobile ? 7 : 9,
+      paddingTop: isMobile ? 8 : 10,
+      borderTop: "1px solid rgba(255,255,255,.08)",
+    } as React.CSSProperties,
+    miniChatInput: {
+      minWidth: 0,
+      height: isMobile ? 34 : 42,
+      padding: isMobile ? "0 10px" : "0 12px",
+      border: "1px solid rgba(255,255,255,.12)",
+      borderRadius: isMobile ? 7 : 9,
+      outline: 0,
+      background: "rgba(255,255,255,.055)",
+      color: "#fff",
+      fontSize: isMobile ? 8 : 11,
+      fontWeight: 800,
+      opacity: isMiniChatReadOnly ? 0.7 : 1,
+    } as React.CSSProperties,
+    miniChatSendButton: {
+      width: isMobile ? 34 : 42,
+      height: isMobile ? 34 : 42,
+      display: "grid",
+      placeItems: "center",
+      border: 0,
+      borderRadius: isMobile ? 7 : 9,
+      background: yellow,
+      color: "#111",
+      cursor: "pointer",
+    } as React.CSSProperties,
   };
 
   return (
@@ -535,7 +680,7 @@ export default function OrderInform() {
             {canCancel ? (
               <button
                 type="button"
-                onClick={handleCancelOrder}
+                onClick={() => setShowCancelModal(true)}
                 disabled={isCanceling}
                 style={s.cancelButton}
               >
@@ -1022,6 +1167,67 @@ export default function OrderInform() {
             </section>
           </div>
         </div>
+
+        <section ref={miniChatRef} style={s.miniChatCard}>
+          <div style={s.miniChatHeader}>
+            <div style={{ ...s.sectionTitle, marginBottom: 0 }}>
+              <MessageCircle size={isMobile ? 11 : 18} style={s.yellowIcon} />
+              Chat do pedido
+            </div>
+            <span style={s.miniChatStatus}>
+              {isMiniChatReadOnly ? "Somente leitura" : "Aberto"}
+            </span>
+          </div>
+
+          <div style={s.miniChatMessages} aria-label="Mensagens do pedido">
+            {miniChatMessages.map((message) => {
+              const isCustomer = message.from === "customer";
+
+              return (
+                <article
+                  key={message.id}
+                  style={{
+                    ...s.miniChatBubble,
+                    alignSelf: isCustomer ? "flex-end" : "flex-start",
+                    borderTopLeftRadius: isCustomer ? undefined : 4,
+                    borderTopRightRadius: isCustomer ? 4 : undefined,
+                    border: isCustomer
+                      ? "1px solid rgba(255,215,0,.18)"
+                      : "1px solid rgba(255,255,255,.09)",
+                    background: isCustomer ? yellow : "rgba(255,255,255,.08)",
+                    color: isCustomer ? "#111" : "#fff",
+                  }}
+                >
+                  <div>{message.text}</div>
+                  <span style={s.miniChatTime}>{message.time}</span>
+                </article>
+              );
+            })}
+          </div>
+
+          <form style={s.miniChatForm} onSubmit={handleMiniChatSubmit}>
+            <input
+              style={s.miniChatInput}
+              value={isMiniChatReadOnly ? "" : miniChatDraft}
+              disabled={isMiniChatReadOnly}
+              onChange={(event) => setMiniChatDraft(event.target.value)}
+              placeholder={
+                isMiniChatReadOnly
+                  ? "Atendimento encerrado - apenas leitura"
+                  : "Digite sua mensagem"
+              }
+            />
+            {!isMiniChatReadOnly ? (
+              <button
+                type="submit"
+                style={s.miniChatSendButton}
+                aria-label="Enviar mensagem"
+              >
+                <Send size={isMobile ? 15 : 18} />
+              </button>
+            ) : null}
+          </form>
+        </section>
       </div>
 
       {isMobile ? (
@@ -1058,6 +1264,12 @@ export default function OrderInform() {
           <div style={{ height: 34, background: "rgba(255,255,255,.12)" }} />
           <button
             type="button"
+            onClick={() =>
+              miniChatRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "end",
+              })
+            }
             style={{
               background: "transparent",
               border: 0,
@@ -1079,6 +1291,19 @@ export default function OrderInform() {
           </button>
         </div>
       ) : null}
+
+      {showCancelModal && (
+        <ConfirmationModal
+          icon={<XCircle size={26} />}
+          title="Deseja cancelar?"
+          description="O pedido será cancelado e não seguirá para preparo ou entrega."
+          cancelLabel="Voltar"
+          confirmLabel={isCanceling ? "Cancelando..." : "Cancelar"}
+          isConfirming={isCanceling}
+          onCancel={() => setShowCancelModal(false)}
+          onConfirm={handleCancelOrder}
+        />
+      )}
     </main>
   );
 }

@@ -12,6 +12,8 @@ import Orders from "./pages/orders/Orders";
 import Favorites from "./pages/favorites/Favorites";
 import Login from "./pages/login/login";
 import Register from "./pages/register/register";
+import Messages from "./pages/messages/Messages";
+import MessageDetails from "./pages/messages/MessageDetails";
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
           <Route path="order-inform" element={<OrderInform />} />
           <Route path="pedidos" element={<Orders />} />
           <Route path="favoritos" element={<Favorites />} />
+          <Route path="mensagens" element={<Messages />} />
+          <Route path="mensagens/:threadId" element={<MessageDetails />} />
           <Route path="perfil" element={<Profile />} />
         </Route>
       </Routes>
