@@ -17,4 +17,11 @@ export const OrderService = {
     const response = await api.get<OrderResponseDto>(`/orders/${id}`);
     return response.data;
   },
+
+  cancel: async (id: string): Promise<OrderResponseDto> => {
+    const response = await api.patch<OrderResponseDto>(`/orders/${id}`, {
+      status: "CANCELED",
+    });
+    return response.data;
+  },
 };

@@ -17,6 +17,7 @@ import {
   QrCode,
   ReceiptText,
   Send,
+  XCircle,
 } from "lucide-react";
 import Colors from "../themes/Colors";
 import { OrderController } from "../controllers/order.controller";
@@ -136,6 +137,7 @@ export default function OrderInform() {
   const isMobile = useIsMobile();
   const state = (location.state || {}) as OrderState;
   const [order, setOrder] = useState<OrderResponseDto | null>(null);
+  const [isCanceling, setIsCanceling] = useState(false);
   const previousStatusRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -208,20 +210,20 @@ export default function OrderInform() {
       order
         ? parseMoney(order.subtotal)
         : typeof state.subtotal === "number"
-        ? state.subtotal
-        : items.reduce((acc, item) => acc + item.price * item.qty, 0),
-    [items, order, state.subtotal]
+          ? state.subtotal
+          : items.reduce((acc, item) => acc + item.price * item.qty, 0),
+    [items, order, state.subtotal],
   );
   const deliveryFee = order
     ? parseMoney(order.deliveryFee)
     : typeof state.deliveryFee === "number"
-    ? state.deliveryFee
-    : 0;
+      ? state.deliveryFee
+      : 0;
   const total = order
     ? parseMoney(order.total)
     : typeof state.total === "number"
-    ? state.total
-    : subtotal + deliveryFee;
+      ? state.total
+      : subtotal + deliveryFee;
   const orderNumber = order?.code
     ? formatOrderCode(order.code)
     : state.orderNumber || "Nao informado";
@@ -234,8 +236,21 @@ export default function OrderInform() {
   const stateAddressSub = state.address?.district
     ? `${state.address.district}${state.address.city ? ` - ${state.address.city}` : ""}${state.address.state ? `/${state.address.state}` : ""}${state.address.cep ? ` - ${state.address.cep}` : ""}`
     : "";
-  const addressLine = order?.addressStreet || stateAddressLine || "Nao informado";
-  const addressSub = order?.addressCityState || stateAddressSub;
+  const orderAddressLine = order?.address
+    ? `${order.address.street}, ${order.address.number}`
+    : "";
+  const orderAddressSub = order?.address
+    ? [
+        order.address.neighborhood,
+        `${order.address.city}/${order.address.state}`,
+        `CEP ${order.address.zipCode}`,
+        order.address.complement,
+      ]
+        .filter(Boolean)
+        .join(" - ")
+    : "";
+  const addressLine = orderAddressLine || stateAddressLine || "Nao informado";
+  const addressSub = orderAddressSub || stateAddressSub;
 
   const yellow = Colors.Highlight.primary;
   const green = "#2ecc71";
@@ -247,6 +262,35 @@ export default function OrderInform() {
     { status: "DELIVERED", label: "Entregue", icon: Home },
   ];
   const progressPercent = (activeStatus / (statuses.length - 1)) * 75;
+  const isCanceled = order?.status === "CANCELED";
+  const canCancel = !!order && order.status !== "DELIVERED" && !isCanceled;
+  const pageTitle = isCanceled
+    ? "Pedido cancelado"
+    : order?.status === "DELIVERED"
+      ? "Pedido entregue"
+      : "Pedido enviado";
+  const pageSubtitle = isCanceled
+    ? "Este pedido foi cancelado."
+    : "Acompanhe o status do seu pedido em tempo real.";
+
+  async function handleCancelOrder() {
+    if (!order || !canCancel || isCanceling) return;
+
+    const shouldCancel = window.confirm("Deseja cancelar este pedido?");
+    if (!shouldCancel) return;
+
+    setIsCanceling(true);
+
+    try {
+      const updatedOrder = await OrderController.cancel(order.id);
+      setOrder(updatedOrder);
+      previousStatusRef.current = updatedOrder.status;
+    } catch {
+      window.alert("Não foi possível cancelar o pedido.");
+    } finally {
+      setIsCanceling(false);
+    }
+  }
 
   const s = {
     page: {
@@ -282,12 +326,16 @@ export default function OrderInform() {
       width: isMobile ? 34 : 42,
       height: isMobile ? 34 : 42,
       borderRadius: "50%",
-      border: "1px solid rgba(255,215,0,.28)",
-      background: "rgba(255,255,255,.035)",
+      border: isCanceled
+        ? "1px solid rgba(239,68,68,.42)"
+        : "1px solid rgba(255,215,0,.28)",
+      background: isCanceled ? "rgba(239,68,68,.08)" : "rgba(255,255,255,.035)",
       display: "grid",
       placeItems: "center",
-      color: yellow,
-      boxShadow: "0 0 18px rgba(255,215,0,.1)",
+      color: isCanceled ? "#ff8b8b" : yellow,
+      boxShadow: isCanceled
+        ? "0 0 18px rgba(239,68,68,.12)"
+        : "0 0 18px rgba(255,215,0,.1)",
       flex: "0 0 auto",
     } as React.CSSProperties,
     h1: {
@@ -321,8 +369,33 @@ export default function OrderInform() {
       cursor: "pointer",
       flex: "0 0 auto",
     } as React.CSSProperties,
+    headerActions: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: isMobile ? 6 : 8,
+      flex: "0 0 auto",
+    } as React.CSSProperties,
+    cancelButton: {
+      height: isMobile ? 30 : 34,
+      padding: isMobile ? "0 9px" : "0 12px",
+      borderRadius: isMobile ? 6 : 7,
+      border: "1px solid rgba(239,68,68,.58)",
+      background: "rgba(239,68,68,.08)",
+      color: "#ff8b8b",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: isMobile ? 5 : 7,
+      fontSize: isMobile ? 8 : 11,
+      fontWeight: 900,
+      whiteSpace: "nowrap",
+      cursor: isCanceling ? "not-allowed" : "pointer",
+      opacity: isCanceling ? 0.62 : 1,
+    } as React.CSSProperties,
     panel: {
-      background: "linear-gradient(135deg, rgba(255,255,255,.055), rgba(255,255,255,.02))",
+      background:
+        "linear-gradient(135deg, rgba(255,255,255,.055), rgba(255,255,255,.02))",
       border: "1px solid rgba(255,255,255,.14)",
       borderRadius: isMobile ? 6 : 8,
       boxShadow: "0 8px 20px rgba(0,0,0,.22)",
@@ -333,14 +406,17 @@ export default function OrderInform() {
     } as React.CSSProperties,
     grid: {
       display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : "minmax(300px, .82fr) minmax(390px, 1.18fr)",
+      gridTemplateColumns: isMobile
+        ? "1fr"
+        : "minmax(300px, .82fr) minmax(390px, 1.18fr)",
       gap: isMobile ? 8 : 12,
       alignItems: "start",
       width: "100%",
     } as React.CSSProperties,
     card: {
       ...({
-        background: "linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.018))",
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.018))",
         border: "1px solid rgba(255,255,255,.14)",
         borderRadius: isMobile ? 6 : 8,
         boxShadow: "0 8px 20px rgba(0,0,0,.22)",
@@ -362,7 +438,9 @@ export default function OrderInform() {
     } as React.CSSProperties,
     item: {
       display: "grid",
-      gridTemplateColumns: isMobile ? "46px minmax(0, 1fr) auto" : "58px 1fr auto",
+      gridTemplateColumns: isMobile
+        ? "46px minmax(0, 1fr) auto"
+        : "58px 1fr auto",
       gap: isMobile ? 8 : 11,
       alignItems: "center",
       marginBottom: isMobile ? 8 : 10,
@@ -442,21 +520,48 @@ export default function OrderInform() {
         <header style={s.header}>
           <div style={s.headerTitle}>
             <div style={s.headerIcon}>
-              <Send size={isMobile ? 19 : 23} strokeWidth={2.2} />
+              {isCanceled ? (
+                <XCircle size={isMobile ? 19 : 23} strokeWidth={2.2} />
+              ) : (
+                <Send size={isMobile ? 19 : 23} strokeWidth={2.2} />
+              )}
             </div>
             <div style={{ minWidth: 0 }}>
-              <h1 style={s.h1}>Pedido enviado</h1>
-              <div style={s.subtitle}>Acompanhe o status do seu pedido em tempo real.</div>
+              <h1 style={s.h1}>{pageTitle}</h1>
+              <div style={s.subtitle}>{pageSubtitle}</div>
             </div>
           </div>
-          <button type="button" onClick={() => navigate("/")} style={s.homeButton}>
-            <Home size={isMobile ? 13 : 15} />
-            Inicio
-          </button>
+          <div style={s.headerActions}>
+            {canCancel ? (
+              <button
+                type="button"
+                onClick={handleCancelOrder}
+                disabled={isCanceling}
+                style={s.cancelButton}
+              >
+                <XCircle size={isMobile ? 13 : 15} />
+                {isCanceling ? "Cancelando..." : "Cancelar"}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              style={s.homeButton}
+            >
+              <Home size={isMobile ? 13 : 15} />
+              Inicio
+            </button>
+          </div>
         </header>
 
         <section style={{ ...s.panel, ...s.statusPanel }}>
-          <div style={{ position: "relative", display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
+          <div
+            style={{
+              position: "relative",
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+            }}
+          >
             <div
               style={{
                 position: "absolute",
@@ -486,9 +591,20 @@ export default function OrderInform() {
               const Icon = step.icon;
               const active = index === activeStatus;
               const completed = index < activeStatus;
-              const stepColor = completed ? green : active ? yellow : "rgba(255,255,255,.54)";
+              const stepColor = completed
+                ? green
+                : active
+                  ? yellow
+                  : "rgba(255,255,255,.54)";
               return (
-                <div key={step.label} style={{ position: "relative", textAlign: "center", zIndex: 1 }}>
+                <div
+                  key={step.label}
+                  style={{
+                    position: "relative",
+                    textAlign: "center",
+                    zIndex: 1,
+                  }}
+                >
                   <div
                     style={{
                       width: isMobile ? 32 : 44,
@@ -497,21 +613,31 @@ export default function OrderInform() {
                       margin: "0 auto",
                       display: "grid",
                       placeItems: "center",
-                      background: completed ? green : active ? yellow : "rgba(10,10,10,.82)",
+                      background: completed
+                        ? green
+                        : active
+                          ? yellow
+                          : "rgba(10,10,10,.82)",
                       border: completed
                         ? `1px solid ${green}`
                         : active
-                        ? `1px solid ${yellow}`
-                        : "1px dashed rgba(255,255,255,.36)",
-                      color: completed || active ? "#050505" : "rgba(255,255,255,.78)",
+                          ? `1px solid ${yellow}`
+                          : "1px dashed rgba(255,255,255,.36)",
+                      color:
+                        completed || active
+                          ? "#050505"
+                          : "rgba(255,255,255,.78)",
                       boxShadow: active
                         ? "0 0 16px rgba(255,215,0,.42)"
                         : completed
-                        ? "0 0 12px rgba(46,204,113,.24)"
-                        : "none",
+                          ? "0 0 12px rgba(46,204,113,.24)"
+                          : "none",
                     }}
                   >
-                    <Icon size={isMobile ? 17 : 22} strokeWidth={completed || active ? 3 : 2.2} />
+                    <Icon
+                      size={isMobile ? 17 : 22}
+                      strokeWidth={completed || active ? 3 : 2.2}
+                    />
                   </div>
                   <div
                     style={{
@@ -544,7 +670,13 @@ export default function OrderInform() {
         <div style={s.grid}>
           <section style={s.card}>
             <div style={{ ...s.sectionTitle, justifyContent: "space-between" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: isMobile ? 5 : 12 }}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: isMobile ? 5 : 12,
+                }}
+              >
                 <ReceiptText size={isMobile ? 11 : 18} style={s.yellowIcon} />
                 Resumo do pedido
               </span>
@@ -592,7 +724,13 @@ export default function OrderInform() {
                 </div>
               ))
             ) : (
-              <div style={{ color: "rgba(255,255,255,.62)", fontSize: isMobile ? 8 : 11, fontWeight: 800 }}>
+              <div
+                style={{
+                  color: "rgba(255,255,255,.62)",
+                  fontSize: isMobile ? 8 : 11,
+                  fontWeight: 800,
+                }}
+              >
                 Nenhum item encontrado.
               </div>
             )}
@@ -611,13 +749,30 @@ export default function OrderInform() {
               </>
             ) : null}
 
-            <div style={isMobile ? { ...s.totalStrong, borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 7 } : s.totalStrong}>
+            <div
+              style={
+                isMobile
+                  ? {
+                      ...s.totalStrong,
+                      borderTop: "1px solid rgba(255,255,255,.1)",
+                      paddingTop: 7,
+                    }
+                  : s.totalStrong
+              }
+            >
               <span>Total do pedido</span>
               <span style={s.totalValue}>{brl(total)}</span>
             </div>
           </section>
 
-          <div style={{ display: "grid", gap: isMobile ? 8 : 12, minWidth: 0, width: "100%" }}>
+          <div
+            style={{
+              display: "grid",
+              gap: isMobile ? 8 : 12,
+              minWidth: 0,
+              width: "100%",
+            }}
+          >
             <section style={s.card}>
               <div style={s.sectionTitle}>
                 <MapPin size={isMobile ? 11 : 18} style={s.yellowIcon} />
@@ -629,17 +784,31 @@ export default function OrderInform() {
                   icon: MapPin,
                   label: "Endereco",
                   value: `${addressLine}${!isMobile && addressSub ? `\n${addressSub}` : ""}`,
-                  action: addressLine !== "Nao informado" ? "Ver no mapa" : undefined,
+                  action:
+                    addressLine !== "Nao informado" ? "Ver no mapa" : undefined,
                   actionIcon: Map,
                 },
-                { icon: ReceiptText, label: "Pagamento", value: orderPaymentLabel, payment: true },
-                { icon: Clock, label: "Previsao de entrega", value: "35-45 min", yellow: true },
+                {
+                  icon: ReceiptText,
+                  label: "Pagamento",
+                  value: orderPaymentLabel,
+                  payment: true,
+                },
+                {
+                  icon: Clock,
+                  label: "Previsao de entrega",
+                  value: "35-45 min",
+                  yellow: true,
+                },
                 {
                   icon: Hash,
                   label: "Numero do pedido",
                   value: orderNumber,
                   yellow: true,
-                  action: !isMobile && orderNumber !== "Nao informado" ? "Copiar numero" : undefined,
+                  action:
+                    !isMobile && orderNumber !== "Nao informado"
+                      ? "Copiar numero"
+                      : undefined,
                   actionIcon: Copy,
                 },
               ].map((row, index) => {
@@ -657,12 +826,22 @@ export default function OrderInform() {
                       gap: isMobile ? 5 : 8,
                       minHeight: isMobile ? 22 : 34,
                       padding: isMobile ? "6px 0" : "0 6px",
-                      borderTop: index ? "1px solid rgba(255,255,255,.08)" : "none",
+                      borderTop: index
+                        ? "1px solid rgba(255,255,255,.08)"
+                        : "none",
                       color: "rgba(255,255,255,.74)",
                     }}
                   >
                     <Icon size={isMobile ? 10 : 15} />
-                    <div style={{ fontSize: isMobile ? 8 : 10, fontWeight: 800, minWidth: 0 }}>{row.label}</div>
+                    <div
+                      style={{
+                        fontSize: isMobile ? 8 : 10,
+                        fontWeight: 800,
+                        minWidth: 0,
+                      }}
+                    >
+                      {row.label}
+                    </div>
                     <div
                       style={{
                         whiteSpace: "pre-line",
@@ -675,7 +854,9 @@ export default function OrderInform() {
                       }}
                     >
                       {row.value}
-                      {isMobile && index === 0 && addressSub ? <div>{addressSub}</div> : null}
+                      {isMobile && index === 0 && addressSub ? (
+                        <div>{addressSub}</div>
+                      ) : null}
                     </div>
                     {row.action ? (
                       <button
@@ -695,24 +876,31 @@ export default function OrderInform() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {ActionIcon ? <ActionIcon size={isMobile ? 8 : 12} /> : null}
+                        {ActionIcon ? (
+                          <ActionIcon size={isMobile ? 8 : 12} />
+                        ) : null}
                         {row.action}
                       </button>
                     ) : row.payment ? (
                       <div
                         style={{
-                          color: orderPaymentMethod === "PIX" ? "#79ddd4" : yellow,
+                          color:
+                            orderPaymentMethod === "PIX" ? "#79ddd4" : yellow,
                           fontSize: isMobile ? 16 : 18,
                           fontWeight: 900,
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "flex-end",
                           gap: 5,
-                          textTransform: orderPaymentMethod === "PIX" ? "lowercase" : "none",
+                          textTransform:
+                            orderPaymentMethod === "PIX" ? "lowercase" : "none",
                         }}
                       >
                         {orderPaymentMethod === "PIX" ? <span>pix</span> : null}
-                        <PaymentStatusIcon size={isMobile ? 15 : 18} strokeWidth={2.4} />
+                        <PaymentStatusIcon
+                          size={isMobile ? 15 : 18}
+                          strokeWidth={2.4}
+                        />
                       </div>
                     ) : (
                       <div />
@@ -735,13 +923,19 @@ export default function OrderInform() {
                 const historyItem = order?.history?.find(
                   (item) => item.status === step.status,
                 );
-                const timelineColor = completed ? green : active ? yellow : "rgba(255,255,255,.5)";
+                const timelineColor = completed
+                  ? green
+                  : active
+                    ? yellow
+                    : "rgba(255,255,255,.5)";
                 return (
                   <div
                     key={step.label}
                     style={{
                       display: "grid",
-                      gridTemplateColumns: isMobile ? "18px 34px minmax(0, 1fr)" : "20px 42px 1fr auto",
+                      gridTemplateColumns: isMobile
+                        ? "18px 34px minmax(0, 1fr)"
+                        : "20px 42px 1fr auto",
                       alignItems: "center",
                       gap: isMobile ? 7 : 8,
                       minHeight: isMobile ? 24 : 30,
@@ -751,7 +945,14 @@ export default function OrderInform() {
                       position: "relative",
                     }}
                   >
-                    <div style={{ position: "relative", height: "100%", display: "grid", placeItems: "center" }}>
+                    <div
+                      style={{
+                        position: "relative",
+                        height: "100%",
+                        display: "grid",
+                        placeItems: "center",
+                      }}
+                    >
                       {index < statuses.length - 1 ? (
                         <div
                           style={{
@@ -760,7 +961,10 @@ export default function OrderInform() {
                             bottom: isMobile ? -13 : -10,
                             left: "50%",
                             width: 2,
-                            background: index < activeStatus ? green : "rgba(255,255,255,.32)",
+                            background:
+                              index < activeStatus
+                                ? green
+                                : "rgba(255,255,255,.32)",
                             transform: "translateX(-50%)",
                           }}
                         />
@@ -772,14 +976,24 @@ export default function OrderInform() {
                           height: isMobile ? 10 : 11,
                           borderRadius: "50%",
                           background: timelineColor,
-                          boxShadow: active ? "0 0 12px rgba(255,215,0,.6)" : "none",
+                          boxShadow: active
+                            ? "0 0 12px rgba(255,215,0,.6)"
+                            : "none",
                         }}
                       />
                     </div>
-                    <span style={{ color: done ? "rgba(255,255,255,.82)" : "rgba(255,255,255,.5)" }}>
+                    <span
+                      style={{
+                        color: done
+                          ? "rgba(255,255,255,.82)"
+                          : "rgba(255,255,255,.5)",
+                      }}
+                    >
                       {done ? formatTime(historyItem?.createdAt) : "--:--"}
                     </span>
-                    <span style={{ minWidth: 0 }}>{active ? historyItem?.label || step.label : step.label}</span>
+                    <span style={{ minWidth: 0 }}>
+                      {active ? historyItem?.label || step.label : step.label}
+                    </span>
                     {active ? (
                       <span
                         style={{
@@ -792,7 +1006,14 @@ export default function OrderInform() {
                           whiteSpace: "nowrap",
                           background: "rgba(255,215,0,.06)",
                         }}
-                      >{order?.status === "PREPARING" ? "Em preparacao" : order?.status === "ON_ROUTE" ? "Saiu para entrega" : order?.status === "DELIVERED" ? "Entregue" : "Aguardando confirmacao"}
+                      >
+                        {order?.status === "PREPARING"
+                          ? "Em preparacao"
+                          : order?.status === "ON_ROUTE"
+                            ? "Saiu para entrega"
+                            : order?.status === "DELIVERED"
+                              ? "Entregue"
+                              : "Aguardando confirmacao"}
                       </span>
                     ) : null}
                   </div>
@@ -821,8 +1042,18 @@ export default function OrderInform() {
           }}
         >
           <div>
-            <div style={{ color: "rgba(255,255,255,.7)", fontSize: 7, fontWeight: 800 }}>Total do pedido</div>
-            <div style={{ color: yellow, fontSize: 15, fontWeight: 900 }}>{brl(total)}</div>
+            <div
+              style={{
+                color: "rgba(255,255,255,.7)",
+                fontSize: 7,
+                fontWeight: 800,
+              }}
+            >
+              Total do pedido
+            </div>
+            <div style={{ color: yellow, fontSize: 15, fontWeight: 900 }}>
+              {brl(total)}
+            </div>
           </div>
           <div style={{ height: 34, background: "rgba(255,255,255,.12)" }} />
           <button
@@ -840,7 +1071,11 @@ export default function OrderInform() {
             }}
           >
             <MessageCircle size={18} color={yellow} />
-            <span>Suporte<br />Fale conosco</span>
+            <span>
+              Suporte
+              <br />
+              Fale conosco
+            </span>
           </button>
         </div>
       ) : null}

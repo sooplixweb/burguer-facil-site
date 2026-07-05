@@ -1,11 +1,8 @@
 .screen {
   width: 100vw;
   min-height: 100vh;
-  background: linear-gradient(
-      180deg,
-      rgba(255, 215, 0, 0.06) 0%,
-      rgba(0, 0, 0, 0) 28%
-    ),
+  background:
+    linear-gradient(180deg, rgba(255, 215, 0, 0.06) 0%, rgba(0, 0, 0, 0) 28%),
     var(--bgPrimary);
   color: var(--textPrimary);
   overflow-x: hidden;
@@ -95,7 +92,7 @@
 .stepSegOn {
   background: rgba(255, 215, 0, 0.9);
   border-color: rgba(255, 215, 0, 0.9);
-  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.10);
+  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.1);
 }
 
 .section {
@@ -128,7 +125,7 @@
   height: 25px;
   padding: 0 12px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0);
   color: rgba(255, 215, 0, 0.9);
   font-size: 10px;
@@ -458,6 +455,16 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.addressBadge {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 7px;
+  background: rgba(255, 215, 0, 0.12);
+  color: rgba(255, 215, 0, 0.95);
+  font-size: 10px;
+  font-weight: 900;
 }
 
 .addressTrash {

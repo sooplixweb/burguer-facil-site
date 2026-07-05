@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import styles from "./FoodDetails.module.css";
 import {
@@ -10,7 +10,6 @@ import {
   ArrowLeft,
   ShoppingCart,
 } from "lucide-react";
-import { FoodCard } from "../../components/food/FoodCard";
 import type { FoodResponseDto } from "../../dtos/Food-Response.Dto";
 import { toast, ToastContainer } from "react-toastify";
 import Colors from "../../themes/Colors";
@@ -64,25 +63,20 @@ export default function FoodDetails() {
   const [note, setNote] = useState("");
   const [cartActived, setCartActivedCart] = useState(false);
   const [products, setProducts] = useState<FoodResponseDto | null>(
-    initialProduct
+    initialProduct,
   );
   const [selectedAddons, setSelectedAddons] = useState<Record<string, boolean>>(
-    {}
+    {},
   );
   const [selectedDrinkOption, setSelectedDrinkOption] = useState<string | null>(
-    null
+    null,
   );
   const [complements] = useState<FoodResponseDto[]>(
-    Array.isArray(initialState.productsMock) ? initialState.productsMock : []
+    Array.isArray(initialState.productsMock) ? initialState.productsMock : [],
   );
   const [productStack, setProductStack] = useState<FoodResponseDto[]>(
-    initialProduct ? [initialProduct] : []
+    initialProduct ? [initialProduct] : [],
   );
-
-  const stackRef = useRef<FoodResponseDto[]>([]);
-  const mountedRef = useRef(false);
-  const prevScrollRestoration = useRef<ScrollRestoration | null>(null);
-  const ignoreNextPopRef = useRef(false);
 
   const resetForNewProduct = () => {
     setQty(1);
@@ -91,70 +85,11 @@ export default function FoodDetails() {
     setSelectedDrinkOption(null);
   };
 
-  const pushTrapHistoryState = () => {
-    ignoreNextPopRef.current = true;
-    window.history.pushState({ trap: true }, "", window.location.href);
-    setTimeout(() => {
-      ignoreNextPopRef.current = false;
-    }, 0);
-  };
-
   useEffect(() => {
-    stackRef.current = productStack;
-  }, [productStack]);
-
-  useEffect(() => {
-    if (mountedRef.current) return;
-    mountedRef.current = true;
-
-    prevScrollRestoration.current = window.history.scrollRestoration;
-    try {
-      window.history.scrollRestoration = "manual";
-    } catch {
-      // Some browsers may not allow changing scroll restoration.
-    }
-
     if (initialProduct) {
       window.scrollTo({ top: 0, behavior: "auto" });
-      pushTrapHistoryState();
     }
-
-    return () => {
-      try {
-        if (prevScrollRestoration.current) {
-          window.history.scrollRestoration = prevScrollRestoration.current;
-        }
-      } catch {
-        // Ignore restoration failures.
-      }
-    };
   }, [initialProduct]);
-
-  useEffect(() => {
-    const onPopState = () => {
-      if (ignoreNextPopRef.current) return;
-
-      const stack = stackRef.current;
-
-      if (stack.length > 1) {
-        const next = stack.slice(0, -1);
-        const prevProduct = next[next.length - 1] || null;
-
-        setProductStack(next);
-        setProducts(prevProduct);
-        resetForNewProduct();
-        window.scrollTo({ top: 0, behavior: "auto" });
-
-        pushTrapHistoryState();
-        return;
-      }
-
-      // quando só tem 1 produto, deixa o back do celular sair pra Main
-    };
-
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, []);
 
   const drinkOptions: DrinkOption[] = [
     { id: "gelado", name: "Gelado" },
@@ -170,6 +105,11 @@ export default function FoodDetails() {
     }));
   }, [products?.addons]);
 
+  const visibleComplements = useMemo(() => {
+    const currentProductId = products?.id ? String(products.id) : "";
+    return complements.filter((item) => String(item.id) !== currentProductId);
+  }, [complements, products?.id]);
+
   const goDetails = (item: FoodResponseDto) => {
     setProductStack((prev) => {
       const last = prev[prev.length - 1];
@@ -180,28 +120,22 @@ export default function FoodDetails() {
     setProducts(item);
     resetForNewProduct();
     window.scrollTo({ top: 0, behavior: "auto" });
-
-    pushTrapHistoryState();
   };
 
   const handleBack = useCallback(() => {
-    const stack = stackRef.current;
-
-    if (stack.length > 1) {
-      const next = stack.slice(0, -1);
+    if (productStack.length > 1) {
+      const next = productStack.slice(0, -1);
       const prevProduct = next[next.length - 1] || null;
 
       setProductStack(next);
       setProducts(prevProduct);
       resetForNewProduct();
       window.scrollTo({ top: 0, behavior: "auto" });
-
-      pushTrapHistoryState();
       return;
     }
 
     navigation(-1);
-  }, [navigation]);
+  }, [navigation, productStack]);
 
   const toggleAddon = (id: string) => {
     setSelectedAddons((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -248,7 +182,14 @@ export default function FoodDetails() {
       totalPrice: unitPrice * qty,
       subtitle: subtitleParts.length ? subtitleParts.join(", ") : undefined,
     };
-  }, [products, qty, note, selectedAddonList, addonsTotal, selectedDrinkOption]);
+  }, [
+    products,
+    qty,
+    note,
+    selectedAddonList,
+    addonsTotal,
+    selectedDrinkOption,
+  ]);
 
   const checkoutItem = useMemo(() => {
     if (!cartItem) return null;
@@ -320,11 +261,7 @@ export default function FoodDetails() {
             alt={products.name}
           />
 
-          <button
-            type="button"
-            className={styles.backBtn}
-            onClick={handleBack}
-          >
+          <button type="button" className={styles.backBtn} onClick={handleBack}>
             <ArrowLeft size={18} />
           </button>
 
@@ -435,25 +372,34 @@ export default function FoodDetails() {
       </div>
 
       <div className={styles.bottomBar}>
-        <div className={styles.stepperWrapper}>
-          <div className={styles.stepper}>
-            <button
-              className={styles.stepBtn}
-              onClick={() => setQty((v) => Math.max(1, v - 1))}
-              type="button"
-            >
-              <Minus size={16} />
-            </button>
+        <div className={styles.purchasePanel}>
+          <div className={styles.purchaseTop}>
+            <div className={styles.stepper}>
+              <button
+                className={styles.stepBtn}
+                onClick={() => setQty((v) => Math.max(1, v - 1))}
+                type="button"
+                aria-label="Diminuir quantidade"
+              >
+                <Minus size={16} />
+              </button>
 
-            <div className={styles.stepValue}>{qty}</div>
+              <div className={styles.stepValue}>{qty}</div>
 
-            <button
-              className={styles.stepBtn}
-              onClick={() => setQty((v) => v + 1)}
-              type="button"
-            >
-              <Plus size={16} />
-            </button>
+              <button
+                className={styles.stepBtn}
+                onClick={() => setQty((v) => v + 1)}
+                type="button"
+                aria-label="Aumentar quantidade"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+
+            <div className={styles.purchaseTotal}>
+              <span>Total</span>
+              <strong>{BRL(total)}</strong>
+            </div>
           </div>
 
           <div className={styles.buttonsWrapper}>
@@ -470,8 +416,8 @@ export default function FoodDetails() {
                 resetForNewProduct();
               }}
             >
+              <ShoppingCart size={18} />
               <span>Adicionar</span>
-              <span className={styles.addBtnPrice}>{BRL(total)}</span>
             </button>
 
             <button
@@ -484,33 +430,58 @@ export default function FoodDetails() {
                 navigation("/checkout", { state: checkoutState });
               }}
             >
-              <span>Pedir</span>
-              <span className={styles.addBtnPrice}>{BRL(total)}</span>
+              <Check size={18} />
+              <span>Pedir agora</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div className={styles.complementsSection}>
-        <h2 className={styles.sectionTitle}>Complementos</h2>
+      {visibleComplements.length > 0 ? (
+        <div className={styles.complementsSection}>
+          <h2 className={styles.sectionTitle}>Complementos</h2>
 
-        <div className={styles.complements}>
-          {complements.map((c) => (
-            <div key={c.id} className={styles.compItem}>
-              <FoodCard
-                id={c.id}
-                img={c.img}
-                name={c.name}
-                desc={c.desc}
-                price={c.price}
-                originalPrice={c.originalPrice}
-                onDetails={() => goDetails(c)}
-                functions={() => activedCart()}
-              />
-            </div>
-          ))}
+          <div className={styles.complements}>
+            {visibleComplements.map((c) => (
+              <article
+                key={c.id}
+                className={styles.compItem}
+                onClick={() => goDetails(c)}
+              >
+                <img className={styles.compImg} src={c.img} alt={c.name} />
+                <div className={styles.compBody}>
+                  <div>
+                    <h3 className={styles.compTitle}>{c.name}</h3>
+                    <p className={styles.compDesc}>{c.desc}</p>
+                  </div>
+                  <div className={styles.compFooter}>
+                    <strong>{BRL(c.price)}</strong>
+                    <button
+                      type="button"
+                      className={styles.compAddBtn}
+                      aria-label="Adicionar complemento"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        addCart({
+                          ...c,
+                          qty: 1,
+                          image: c.img,
+                        });
+                        toast.success("Produto adicionado ao carrinho", {
+                          autoClose: 1500,
+                        });
+                        activedCart();
+                      }}
+                    >
+                      <Plus size={17} />
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }

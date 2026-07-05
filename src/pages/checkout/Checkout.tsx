@@ -5,13 +5,11 @@ import Colors from "../../themes/Colors";
 import {
   ArrowLeft,
   ShoppingCart,
-  MapPin,
   User,
   Wallet,
   Check,
   Send,
   Home,
-  Trash2,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -19,11 +17,12 @@ import { OrderController } from "../../controllers/order.controller";
 import { PaymentMethod } from "../../dtos/enums/payment-method.enum";
 import type { PaymentMethodEnum } from "../../dtos/enums/payment-method.enum";
 import type { OrderRequestDto } from "../../dtos/request/order-request.dto";
+import type { AddressResponseDto } from "../../dtos/response/address-response.dto";
 import { useStoreStatus } from "../../hooks/useStoreStatus";
-import {
-  CART_STORAGE_KEY,
-  notifyCartUpdated,
-} from "../../utils/cartStorage";
+import { CART_STORAGE_KEY, notifyCartUpdated } from "../../utils/cartStorage";
+import { AddressService } from "../../service/address.service";
+import { UserService } from "../../service/user.service";
+import { getRequestErrorMessage } from "../../utils/getRequestErrorMessage";
 
 type CartItem = {
   id: string;
@@ -45,20 +44,6 @@ type CheckoutNavState = {
 
 type PaymentType = PaymentMethodEnum;
 
-type SavedAddress = {
-  id: string;
-  fullName: string;
-  phone: string;
-  cep: string;
-  street: string;
-  number: string;
-  district: string;
-  city: string;
-  state: string;
-  complement?: string;
-  createdAt: number;
-};
-
 type CheckoutCssVars = CSSProperties & {
   "--bgPrimary": string;
   "--bgSecondary": string;
@@ -67,12 +52,7 @@ type CheckoutCssVars = CSSProperties & {
   "--textSecondary": string;
 };
 
-const LS_KEY = "mb_checkout_addresses_v1";
 const LS_SELECTED_KEY = "mb_checkout_selected_address_v1";
-
-function uid() {
-  return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
-}
 
 function onlyDigits(v: string) {
   return (v || "").replace(/\D/g, "");
@@ -88,19 +68,6 @@ function maskPhoneBR(input: string) {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
 
-function maskCep(input: string) {
-  const d = onlyDigits(input).slice(0, 8);
-  if (d.length <= 5) return d;
-  return `${d.slice(0, 5)}-${d.slice(5)}`;
-}
-
-function maskUf(input: string) {
-  return input
-    .replace(/[^a-zA-Z]/g, "")
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 function maskMoneyBR(input: string) {
   const cleaned = input.replace(/[^\d,.]/g, "").replace(/\./g, ",");
   const parts = cleaned.split(",");
@@ -110,20 +77,14 @@ function maskMoneyBR(input: string) {
   return f.length ? `${i || "0"},${f}` : `${i}`;
 }
 
-function parseLSAddresses(): SavedAddress[] {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return [];
-    const data = JSON.parse(raw);
-    if (!Array.isArray(data)) return [];
-    return data.filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
-function saveLSAddresses(list: SavedAddress[]) {
-  localStorage.setItem(LS_KEY, JSON.stringify(list));
+function formatAddressDetails(address: AddressResponseDto) {
+  return [
+    address.neighborhood,
+    `${address.city}/${address.state}`,
+    `CEP ${address.zipCode}`,
+  ]
+    .filter(Boolean)
+    .join(" - ");
 }
 
 export default function Checkout() {
@@ -141,37 +102,84 @@ export default function Checkout() {
   const orderObs = state.orderObs || "";
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [cep, setCep] = useState("");
-  const [street, setStreet] = useState("");
-  const [number, setNumber] = useState("");
-  const [district, setDistrict] = useState("");
-  const [city, setCity] = useState("");
-  const [uf, setUf] = useState("");
-  const [complement, setComplement] = useState("");
   const [payment, setPayment] = useState<PaymentType>(PaymentMethod.PIX);
   const [cashChange, setCashChange] = useState("");
   const [needChange, setNeedChange] = useState<boolean | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const storeStatus = useStoreStatus();
 
-  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<AddressResponseDto[]>(
+    [],
+  );
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null,
   );
-  const [useNewAddress, setUseNewAddress] = useState(false);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
+  const [addressError, setAddressError] = useState("");
 
   const brl = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   useEffect(() => {
-    const list = parseLSAddresses().sort((a, b) => b.createdAt - a.createdAt);
-    setSavedAddresses(list);
-    try {
-      const sel = localStorage.getItem(LS_SELECTED_KEY);
-      if (sel) setSelectedAddressId(sel);
-    } catch {
-      // Ignore storage access errors.
+    let active = true;
+
+    async function loadInitialData() {
+      try {
+        const storedUserId = localStorage.getItem("userId");
+
+        if (storedUserId) {
+          const user = await UserService.findOne(storedUserId);
+          if (!active) return;
+          setFullName(user.name || "");
+          setPhone(maskPhoneBR(user.phone || ""));
+        }
+      } catch {
+        if (active) {
+          setFullName("");
+          setPhone("");
+        }
+      }
+
+      try {
+        const data = await AddressService.findAll();
+        if (!active) return;
+
+        const sorted = [...data].sort((a, b) => {
+          if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        });
+
+        setSavedAddresses(sorted);
+        setAddressError("");
+
+        const storedSelectedId = localStorage.getItem(LS_SELECTED_KEY);
+        const selected =
+          sorted.find((address) => address.id === storedSelectedId) ||
+          sorted.find((address) => address.isDefault) ||
+          sorted[0];
+
+        setSelectedAddressId(selected?.id ?? null);
+      } catch (error) {
+        if (active) {
+          setAddressError(
+            getRequestErrorMessage(
+              error,
+              "Não foi possível carregar seus endereços.",
+            ),
+          );
+        }
+      } finally {
+        if (active) setLoadingAddresses(false);
+      }
     }
+
+    void loadInitialData();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -185,37 +193,11 @@ export default function Checkout() {
     if (!selectedAddressId) return null;
     return savedAddresses.find((a) => a.id === selectedAddressId) || null;
   }, [savedAddresses, selectedAddressId]);
-  const usingSavedAddress = !useNewAddress && !!selectedAddress;
-  const fullNameValue = usingSavedAddress
-    ? selectedAddress?.fullName || ""
-    : fullName;
-  const phoneValue = usingSavedAddress ? selectedAddress?.phone || "" : phone;
-  const cepValue = usingSavedAddress ? selectedAddress?.cep || "" : cep;
-  const streetValue = usingSavedAddress
-    ? selectedAddress?.street || ""
-    : street;
-  const numberValue = usingSavedAddress
-    ? selectedAddress?.number || ""
-    : number;
-  const districtValue = usingSavedAddress
-    ? selectedAddress?.district || ""
-    : district;
-  const cityValue = usingSavedAddress ? selectedAddress?.city || "" : city;
-  const ufValue = usingSavedAddress ? selectedAddress?.state || "" : uf;
-  const complementValue = usingSavedAddress
-    ? selectedAddress?.complement || ""
-    : complement;
 
   const step1Done =
-    fullNameValue.trim().length > 0 && onlyDigits(phoneValue).length >= 10;
+    fullName.trim().length > 0 && onlyDigits(phone).length >= 10;
 
-  const step2Done =
-    onlyDigits(cepValue).length === 8 &&
-    streetValue.trim().length > 0 &&
-    numberValue.trim().length > 0 &&
-    districtValue.trim().length > 0 &&
-    cityValue.trim().length > 0 &&
-    ufValue.trim().length === 2;
+  const step2Done = !!selectedAddress;
 
   const step3Done =
     payment !== PaymentMethod.CASH ||
@@ -223,123 +205,39 @@ export default function Checkout() {
     (needChange === true && cashChange.trim().length > 0);
 
   const canSend =
-    items.length > 0 && step1Done && step2Done && step3Done && !isSubmitting;
+    items.length > 0 &&
+    step1Done &&
+    step2Done &&
+    step3Done &&
+    !loadingAddresses &&
+    !isSubmitting;
 
   const openNow = storeStatus.openNow;
 
-  function persistAddressAfterSend() {
-    const base = {
-      fullName: fullNameValue.trim(),
-      phone: phoneValue.trim(),
-      cep: cepValue.trim(),
-      street: streetValue.trim(),
-      number: numberValue.trim(),
-      district: districtValue.trim(),
-      city: cityValue.trim(),
-      state: ufValue.trim(),
-      complement: String(complementValue || "").trim(),
-    };
-
-    const newAddr: SavedAddress = {
-      id: uid(),
-      ...base,
-      createdAt: Date.now(),
-    };
-
-    const same = (a: SavedAddress) =>
-      onlyDigits(a.cep) === onlyDigits(newAddr.cep) &&
-      a.street.trim().toLowerCase() === newAddr.street.trim().toLowerCase() &&
-      a.number.trim().toLowerCase() === newAddr.number.trim().toLowerCase() &&
-      a.district.trim().toLowerCase() ===
-        newAddr.district.trim().toLowerCase() &&
-      (a.complement || "").trim().toLowerCase() ===
-        (newAddr.complement || "").trim().toLowerCase();
-
-    const existing = savedAddresses.find(same);
-    const next = existing
-      ? savedAddresses.map((a) =>
-          a.id === existing.id
-            ? { ...a, ...newAddr, id: existing.id, createdAt: Date.now() }
-            : a,
-        )
-      : [newAddr, ...savedAddresses];
-
-    saveLSAddresses(next);
-    setSavedAddresses(next);
-
-    const chosenId = existing ? existing.id : newAddr.id;
-    setSelectedAddressId(chosenId);
-    localStorage.setItem(LS_SELECTED_KEY, chosenId);
-    setUseNewAddress(false);
-  }
-
   function handleSelectAddress(id: string) {
-    const addr = savedAddresses.find((a) => a.id === id);
     setSelectedAddressId(id);
     localStorage.setItem(LS_SELECTED_KEY, id);
-    setUseNewAddress(false);
-
-    if (addr) {
-      setFullName(addr.fullName || "");
-      setPhone(addr.phone || "");
-      setCep(addr.cep || "");
-      setStreet(addr.street || "");
-      setNumber(addr.number || "");
-      setDistrict(addr.district || "");
-      setCity(addr.city || "");
-      setUf(addr.state || "");
-      setComplement(addr.complement || "");
-    }
-  }
-
-  function handleUseNewAddress() {
-    setUseNewAddress(true);
-    setSelectedAddressId(null);
-    localStorage.removeItem(LS_SELECTED_KEY);
-    setFullName("");
-    setPhone("");
-    setCep("");
-    setStreet("");
-    setNumber("");
-    setDistrict("");
-    setCity("");
-    setUf("");
-    setComplement("");
-  }
-
-  function handleDeleteAddress(id: string) {
-    const next = savedAddresses.filter((a) => a.id !== id);
-    saveLSAddresses(next);
-    setSavedAddresses(next);
-    if (selectedAddressId === id) {
-      setSelectedAddressId(null);
-      localStorage.removeItem(LS_SELECTED_KEY);
-    }
   }
 
   function buildOrderPayload(): OrderRequestDto {
     const extraInfo = [
-      String(complementValue || "").trim(),
       orderObs.trim() ? `Obs pedido: ${orderObs.trim()}` : "",
       payment === PaymentMethod.CASH && needChange === true
         ? `Troco para: R$ ${cashChange.trim()}`
         : "",
     ].filter(Boolean);
+    const orderObservation = extraInfo.join(" | ");
 
     return {
       paymentMethod: payment,
-      customerName: fullNameValue.trim(),
-      customerPhone: onlyDigits(phoneValue),
-      addressStreet: `${streetValue.trim()}, Nº ${numberValue.trim()}`,
-      addressCityState: `${cityValue.trim()}/${ufValue
-        .trim()
-        .toUpperCase()} - ${districtValue.trim()} - CEP ${cepValue.trim()}`,
-      addressComplement: extraInfo.length ? extraInfo.join(" | ") : undefined,
+      customerName: fullName.trim(),
+      customerPhone: onlyDigits(phone),
+      addressId: selectedAddress?.id || "",
       subtotal,
       deliveryFee: items.length ? deliveryFee : 0,
       discount: 0,
       total,
-      items: items.map((item) => ({
+      items: items.map((item, index) => ({
         id: String(item.id),
         productId: String(item.id),
         name: item.name,
@@ -348,7 +246,9 @@ export default function Checkout() {
         quantity: item.qty,
         unitPrice: item.price,
         totalPrice: item.price * item.qty,
-        observations: item.note,
+        observations: [item.note, index === 0 ? orderObservation : ""]
+          .filter(Boolean)
+          .join(" | "),
       })),
     };
   }
@@ -380,7 +280,6 @@ export default function Checkout() {
     try {
       const createdOrder = await OrderController.create(buildOrderPayload());
 
-      persistAddressAfterSend();
       localStorage.removeItem(CART_STORAGE_KEY);
       notifyCartUpdated();
       nav("/order-inform", {
@@ -390,9 +289,9 @@ export default function Checkout() {
       });
       localStorage.removeItem(CART_STORAGE_KEY);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro ao criar pedido";
-      toast.error(message, { autoClose: 3000 });
+      toast.error(getRequestErrorMessage(error, "Erro ao criar pedido"), {
+        autoClose: 3000,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -402,7 +301,7 @@ export default function Checkout() {
     <div
       className={styles.screen}
       style={
-          {
+        {
           "--bgPrimary": Colors.Background.primary,
           "--bgSecondary": Colors.Background.secondary,
           "--highlight": Colors.Highlight.primary,
@@ -497,65 +396,112 @@ export default function Checkout() {
 
         <section className={styles.section}>
           <div className={styles.sectionTitle}>
-            <Home size={16} />
-            <span>Endereços salvos</span>
+            <User size={16} />
+            <span>Seus Dados</span>
           </div>
 
-          {savedAddresses.length === 0 ? (
+          <div className={styles.formGrid}>
+            <label className={styles.field}>
+              <span className={styles.label}>Nome Completo</span>
+              <input
+                className={styles.input}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Como devemos te chamar?"
+                autoComplete="name"
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span className={styles.label}>Telefone / WhatsApp</span>
+              <input
+                className={styles.input}
+                value={phone}
+                onChange={(e) => setPhone(maskPhoneBR(e.target.value))}
+                placeholder="(00) 00000-0000"
+                inputMode="tel"
+                autoComplete="tel"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.sectionTitle}>
+            <Home size={16} />
+            <span>Endereço de entrega</span>
+          </div>
+
+          {addressError ? (
+            <div className={styles.emptyAddressCard}>
+              <div className={styles.emptyAddressTitle}>{addressError}</div>
+              <button
+                type="button"
+                className={styles.useNewBtn}
+                onClick={() =>
+                  nav("/perfil", { state: { openAddresses: true } })
+                }
+              >
+                Gerenciar endereços
+              </button>
+            </div>
+          ) : loadingAddresses ? (
             <div className={styles.emptyAddressCard}>
               <div className={styles.emptyAddressTitle}>
-                Nenhum endereço salvo ainda
+                Carregando endereços...
+              </div>
+            </div>
+          ) : savedAddresses.length === 0 ? (
+            <div className={styles.emptyAddressCard}>
+              <div className={styles.emptyAddressTitle}>
+                Nenhum endereço cadastrado
               </div>
               <div className={styles.emptyAddressDesc}>
-                Finalize um pedido para salvar seu endereço aqui.
+                Cadastre um endereço no perfil para finalizar o pedido.
               </div>
               <button
                 type="button"
                 className={styles.useNewBtn}
-                onClick={handleUseNewAddress}
+                onClick={() =>
+                  nav("/perfil", { state: { openAddresses: true } })
+                }
               >
-                Adicionar endereço
+                Cadastrar endereço
               </button>
             </div>
           ) : (
             <div className={styles.addressList}>
-              {savedAddresses.map((a) => {
-                const active = a.id === selectedAddressId && !useNewAddress;
+              {savedAddresses.map((address) => {
+                const active = address.id === selectedAddressId;
                 return (
                   <button
-                    key={a.id}
+                    key={address.id}
                     type="button"
                     className={`${styles.addressCard} ${
                       active ? styles.addressCardActive : ""
                     }`}
-                    onClick={() => handleSelectAddress(a.id)}
+                    onClick={() => handleSelectAddress(address.id)}
                   >
                     <div className={styles.addressTopRow}>
                       <div className={styles.addressTitle}>
-                        {a.street}, {a.number}
+                        {address.street}, {address.number}
                       </div>
-                      <button
-                        type="button"
-                        className={styles.addressTrash}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteAddress(a.id);
-                        }}
-                        aria-label="Excluir endereço"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {address.isDefault ? (
+                        <span className={styles.addressBadge}>Padrão</span>
+                      ) : null}
                     </div>
                     <div className={styles.addressMeta}>
-                      <span>
-                        {[a.district, a.city, a.state]
-                          .filter(Boolean)
-                          .join(" - ")}
-                      </span>
-                      <span className={styles.addressCep}>{a.cep}</span>
+                      <span>{formatAddressDetails(address)}</span>
                     </div>
-                    {a.complement ? (
-                      <div className={styles.addressComp}>{a.complement}</div>
+                    {address.complement ? (
+                      <div className={styles.addressComp}>
+                        {address.complement}
+                      </div>
+                    ) : null}
+                    {address.reference ? (
+                      <div className={styles.addressComp}>
+                        {address.reference}
+                      </div>
                     ) : null}
                   </button>
                 );
@@ -564,143 +510,15 @@ export default function Checkout() {
               <button
                 type="button"
                 className={styles.useNewBtn}
-                onClick={handleUseNewAddress}
+                onClick={() =>
+                  nav("/perfil", { state: { openAddresses: true } })
+                }
               >
-                Usar novo endereço
+                Gerenciar endereços
               </button>
             </div>
           )}
         </section>
-
-        {useNewAddress ? (
-          <>
-            <section className={styles.section}>
-              <div className={styles.sectionTitle}>
-                <User size={16} />
-                <span>Seus Dados</span>
-              </div>
-
-              <div className={styles.formGrid}>
-                <label className={styles.field}>
-                  <span className={styles.label}>Nome Completo</span>
-                  <input
-                    className={styles.input}
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Como devemos te chamar?"
-                    autoComplete="name"
-                  />
-                </label>
-
-                <label className={styles.field}>
-                  <span className={styles.label}>Telefone / WhatsApp</span>
-                  <input
-                    className={styles.input}
-                    value={phone}
-                    onChange={(e) => setPhone(maskPhoneBR(e.target.value))}
-                    placeholder="(00) 00000-0000"
-                    inputMode="tel"
-                    autoComplete="tel"
-                  />
-                </label>
-              </div>
-            </section>
-
-            <section className={styles.section}>
-              <div className={styles.sectionTitle}>
-                <MapPin size={16} />
-                <span>Entrega</span>
-              </div>
-
-              <div className={styles.formGrid}>
-                <label className={styles.field}>
-                  <span className={styles.label}>CEP</span>
-                  <input
-                    className={styles.input}
-                    value={cep}
-                    onChange={(e) => setCep(maskCep(e.target.value))}
-                    placeholder="00000-000"
-                    inputMode="numeric"
-                    autoComplete="postal-code"
-                  />
-                </label>
-
-                <div className={styles.row2}>
-                  <label className={styles.field}>
-                    <span className={styles.label}>Rua</span>
-                    <input
-                      className={styles.input}
-                      value={street}
-                      onChange={(e) => setStreet(e.target.value)}
-                      placeholder="Nome da rua"
-                      autoComplete="address-line1"
-                    />
-                  </label>
-
-                  <label className={styles.field}>
-                    <span className={styles.label}>Número</span>
-                    <input
-                      className={styles.input}
-                      value={number}
-                      onChange={(e) =>
-                        setNumber(onlyDigits(e.target.value).slice(0, 6))
-                      }
-                      placeholder="123"
-                      inputMode="numeric"
-                      autoComplete="off"
-                    />
-                  </label>
-                </div>
-
-                <label className={styles.field}>
-                  <span className={styles.label}>Bairro</span>
-                  <input
-                    className={styles.input}
-                    value={district}
-                    onChange={(e) => setDistrict(e.target.value)}
-                    placeholder="Seu bairro"
-                    autoComplete="address-level3"
-                  />
-                </label>
-
-                <div className={styles.row2}>
-                  <label className={styles.field}>
-                    <span className={styles.label}>Cidade</span>
-                    <input
-                      className={styles.input}
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="Sua cidade"
-                      autoComplete="address-level2"
-                    />
-                  </label>
-
-                  <label className={styles.field}>
-                    <span className={styles.label}>UF</span>
-                    <input
-                      className={styles.input}
-                      value={uf}
-                      onChange={(e) => setUf(maskUf(e.target.value))}
-                      placeholder="GO"
-                      autoComplete="address-level1"
-                    />
-                  </label>
-                </div>
-
-                <label className={styles.field}>
-                  <span className={styles.label}>Complemento (Opcional)</span>
-                  <input
-                    className={styles.input}
-                    value={complement}
-                    onChange={(e) => setComplement(e.target.value)}
-                    placeholder="Apto, Bloco, Ponto de referência..."
-                    autoComplete="address-line2"
-                  />
-                </label>
-              </div>
-            </section>
-          </>
-        ) : null}
 
         <section className={styles.section}>
           <div className={styles.sectionTitle}>

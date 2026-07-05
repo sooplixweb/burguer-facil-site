@@ -10,4 +10,8 @@ export const OrderController = {
   findById: async (id: string): Promise<OrderResponseDto | null> => {
     return OrderService.findById(id);
   },
+
+  cancel: async (id: string): Promise<OrderResponseDto> => {
+    return OrderService.cancel(id);
+  },
 };
