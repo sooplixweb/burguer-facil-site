@@ -5,7 +5,7 @@ import Main from "./pages/main/Main";
 import Checkout from "./pages/checkout/Checkout";
 import FoodDetails from "./pages/food/FoodDetails";
 import ScrollToTop from "./components/ScrollToTop";
-import OrderInform from "./pages/order-inform";
+import OrderInform from "./pages/orderinfroma/order-inform";
 import { DashboardLayout } from "./components/layouts/DashboardLayout";
 import Profile from "./pages/profile/Profile";
 import Orders from "./pages/orders/Orders";

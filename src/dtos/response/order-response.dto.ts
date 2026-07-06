@@ -1,6 +1,7 @@
 import type { PaymentMethodEnum } from "../enums/payment-method.enum";
 import type { OrderItem } from "../../types/order-item.type";
 import type { AddressResponseDto } from "./address-response.dto";
+import type { ChatResponseDto } from "./chat-response.dto";
 
 type OrderHistory = {
   status: string;
@@ -13,7 +14,9 @@ export interface OrderResponseDto {
   id: string;
   userId: string;
   addressId?: string;
+  chatId?: string;
   address?: AddressResponseDto;
+  chat?: ChatResponseDto;
   code: number;
   status: string;
   paymentMethod: PaymentMethodEnum;

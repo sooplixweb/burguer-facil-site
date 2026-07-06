@@ -1,0 +1,1051 @@
+.page {
+  --yellow: #ffd700;
+  --green: #2ecc71;
+  --danger: #ff8b8b;
+
+  min-height: 100vh;
+  width: 100%;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 215, 0, 0.08), transparent 26%),
+    linear-gradient(180deg, #0b0b0b 0%, #050505 100%);
+  color: #fff;
+  font-family: var(--font-primary);
+  padding: 14px 24px 22px;
+  overflow-x: hidden;
+}
+
+.shell {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  min-width: 0;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.headerCopy {
+  min-width: 0;
+}
+
+.headerIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 215, 0, 0.28);
+  background: rgba(255, 255, 255, 0.035);
+  display: grid;
+  place-items: center;
+  color: var(--yellow);
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.1);
+  flex: 0 0 auto;
+}
+
+.headerIcon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.headerIconCanceled {
+  border-color: rgba(239, 68, 68, 0.42);
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--danger);
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.12);
+}
+
+.title {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.subtitle {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.homeButton,
+.cancelButton {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.homeButton svg,
+.cancelButton svg {
+  width: 15px;
+  height: 15px;
+}
+
+.homeButton {
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  background: rgba(255, 215, 0, 0.04);
+  color: var(--yellow);
+}
+
+.cancelButton {
+  border: 1px solid rgba(239, 68, 68, 0.58);
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--danger);
+}
+
+.cancelButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.panel,
+.card,
+.miniChatCard {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+.statusPanel {
+  padding: 14px 28px 12px;
+  margin-bottom: 10px;
+}
+
+.statusTrack {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.statusTrackBase,
+.statusTrackFill {
+  position: absolute;
+  left: 12.5%;
+  top: 22px;
+  height: 3px;
+  transform: translateY(-50%);
+}
+
+.statusTrackBase {
+  width: 75%;
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.statusTrackFill {
+  background: var(--yellow);
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.38);
+  transition: width 0.28s ease;
+}
+
+.progress0 {
+  width: 0;
+}
+
+.progress25 {
+  width: 25%;
+}
+
+.progress50 {
+  width: 50%;
+}
+
+.progress75 {
+  width: 75%;
+}
+
+.statusStep {
+  position: relative;
+  text-align: center;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.statusStepCompleted {
+  color: var(--green);
+}
+
+.statusStepActive {
+  color: var(--yellow);
+}
+
+.statusStepIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 10, 10, 0.82);
+  border: 1px dashed rgba(255, 255, 255, 0.36);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.statusStepIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.statusStepIconCompleted {
+  background: var(--green);
+  border-color: var(--green);
+  color: #050505;
+  box-shadow: 0 0 12px rgba(46, 204, 113, 0.24);
+}
+
+.statusStepIconActive {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: #050505;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.42);
+}
+
+.statusStepIndex {
+  color: currentColor;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  margin-top: 6px;
+}
+
+.statusStepLabel {
+  color: currentColor;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.18;
+  margin-top: 5px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.82fr) minmax(390px, 1.18fr);
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+}
+
+.card {
+  padding: 13px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 900;
+  margin-bottom: 12px;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.sectionTitle svg {
+  width: 18px;
+  height: 18px;
+  color: var(--yellow);
+  flex: 0 0 auto;
+}
+
+.sectionTitleBetween {
+  justify-content: space-between;
+}
+
+.sectionTitleLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.detailsButton {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: var(--yellow);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.detailsButton svg {
+  width: 13px;
+  height: 13px;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 58px 1fr auto;
+  gap: 11px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.thumb,
+.thumbPlaceholder {
+  width: 58px;
+  height: 52px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.thumb {
+  object-fit: cover;
+}
+
+.thumbPlaceholder {
+  color: rgba(255, 255, 255, 0.38);
+  display: grid;
+  place-items: center;
+}
+
+.thumbPlaceholder svg {
+  width: 20px;
+  height: 20px;
+}
+
+.itemInfo {
+  min-width: 0;
+}
+
+.itemName {
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 3px;
+}
+
+.itemDesc {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 700;
+  max-width: 320px;
+}
+
+.itemPrice {
+  color: var(--yellow);
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.emptyText {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 10px 0;
+}
+
+.totalLine,
+.totalStrong {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.totalLine {
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.62);
+  margin-top: 6px;
+}
+
+.totalStrong {
+  font-size: 14px;
+  font-weight: 900;
+  margin-top: 10px;
+}
+
+.totalValue {
+  color: var(--yellow);
+  font-size: 17px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.sideGrid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  width: 100%;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: 20px 102px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 6px;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.detailRow + .detailRow {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.detailIcon {
+  width: 15px;
+  height: 15px;
+}
+
+.detailLabel {
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 0;
+}
+
+.detailValue {
+  white-space: pre-line;
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.8);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.detailValueYellow {
+  color: var(--yellow);
+}
+
+.detailActionButton {
+  border: 1px solid rgba(255, 215, 0, 0.6);
+  background: rgba(255, 215, 0, 0.03);
+  color: var(--yellow);
+  border-radius: 6px;
+  height: 28px;
+  padding: 0 9px;
+  font-size: 10px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.detailActionButton svg {
+  width: 12px;
+  height: 12px;
+}
+
+.paymentStatusIcon {
+  color: var(--yellow);
+  font-size: 18px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.paymentStatusIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.paymentStatusPix {
+  color: #79ddd4;
+  text-transform: lowercase;
+}
+
+.timelineItem {
+  display: grid;
+  grid-template-columns: 20px 42px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  font-weight: 900;
+  position: relative;
+}
+
+.timelineItemCompleted {
+  color: var(--green);
+}
+
+.timelineItemActive {
+  color: var(--yellow);
+}
+
+.timelineMarker {
+  position: relative;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.timelineLine {
+  position: absolute;
+  top: 50%;
+  bottom: -10px;
+  left: 50%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.32);
+  transform: translateX(-50%);
+}
+
+.timelineLineCompleted {
+  background: var(--green);
+}
+
+.timelineDot {
+  position: relative;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.timelineItemActive .timelineDot {
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+.timelineTime {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.timelineItemCompleted .timelineTime,
+.timelineItemActive .timelineTime {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.timelineLabel {
+  min-width: 0;
+}
+
+.timelineBadge {
+  display: inline-block;
+  color: var(--yellow);
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 10px;
+  white-space: nowrap;
+  background: rgba(255, 215, 0, 0.06);
+}
+
+.miniChatCard {
+  padding: 13px;
+  margin-top: 12px;
+}
+
+.miniChatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.miniChatTitle {
+  margin-bottom: 0;
+}
+
+.miniChatStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid rgba(46, 204, 113, 0.38);
+  border-radius: 999px;
+  background: rgba(46, 204, 113, 0.1);
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.miniChatStatusReadOnly {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.miniChatMessages {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: 190px;
+  overflow-y: auto;
+  padding: 10px 2px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.miniChatBubble {
+  width: fit-content;
+  max-width: 72%;
+  padding: 10px 11px 7px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.miniChatBubbleStore {
+  align-self: flex-start;
+  border-top-left-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.miniChatBubbleCustomer {
+  align-self: flex-end;
+  border-top-right-radius: 4px;
+  border: 1px solid rgba(255, 215, 0, 0.18);
+  background: var(--yellow);
+  color: #111;
+}
+
+.miniChatTime {
+  display: block;
+  margin-top: 5px;
+  text-align: right;
+  font-size: 9px;
+  font-weight: 900;
+  opacity: 0.58;
+}
+
+.miniChatForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 9px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.miniChatFormReadOnly {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.miniChatInput {
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  outline: 0;
+  background: rgba(255, 255, 255, 0.055);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.miniChatInput:disabled {
+  opacity: 0.7;
+}
+
+.miniChatSendButton {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: var(--yellow);
+  color: #111;
+  cursor: pointer;
+}
+
+.miniChatSendButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.miniChatSendButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mobileBottomBar {
+  display: none;
+}
+
+@media (max-width: 1180px) {
+  .page {
+    padding: 12px 10px 76px;
+  }
+
+  .shell {
+    max-width: 430px;
+  }
+
+  .header {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .headerTitle {
+    gap: 9px;
+  }
+
+  .headerIcon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .headerIcon svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .title {
+    font-size: 13px;
+  }
+
+  .subtitle {
+    margin-top: 2px;
+    font-size: 8px;
+  }
+
+  .headerActions {
+    gap: 6px;
+  }
+
+  .homeButton,
+  .cancelButton {
+    height: 30px;
+    padding: 0 9px;
+    border-radius: 6px;
+    gap: 5px;
+    font-size: 8px;
+  }
+
+  .homeButton svg,
+  .cancelButton svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .panel,
+  .card,
+  .miniChatCard {
+    border-radius: 6px;
+  }
+
+  .statusPanel {
+    padding: 10px 8px 7px;
+    margin-bottom: 8px;
+  }
+
+  .statusTrackBase,
+  .statusTrackFill {
+    top: 15px;
+    height: 2px;
+  }
+
+  .statusStepIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .statusStepIcon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .statusStepIndex {
+    font-size: 7px;
+    margin-top: 4px;
+  }
+
+  .statusStepLabel {
+    font-size: 6px;
+    margin-top: 2px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .card {
+    padding: 8px;
+  }
+
+  .sectionTitle {
+    gap: 6px;
+    font-size: 9px;
+    margin-bottom: 8px;
+  }
+
+  .sectionTitle svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .sectionTitleLabel {
+    gap: 5px;
+  }
+
+  .detailsButton,
+  .desktopOnly,
+  .detailActionDesktopOnly {
+    display: none;
+  }
+
+  .item {
+    grid-template-columns: 46px minmax(0, 1fr) auto;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .thumb,
+  .thumbPlaceholder {
+    width: 46px;
+    height: 46px;
+    border-radius: 5px;
+  }
+
+  .thumbPlaceholder svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .itemName {
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+
+  .itemDesc {
+    font-size: 8px;
+    max-width: 100%;
+  }
+
+  .itemPrice {
+    font-size: 10px;
+  }
+
+  .emptyText {
+    font-size: 8px;
+  }
+
+  .totalStrong {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 7px;
+    font-size: 10px;
+    margin-top: 8px;
+  }
+
+  .totalValue {
+    font-size: 12px;
+  }
+
+  .sideGrid {
+    gap: 8px;
+  }
+
+  .detailRow {
+    grid-template-columns: 16px 68px minmax(0, 1fr) auto;
+    gap: 5px;
+    min-height: 22px;
+    padding: 6px 0;
+  }
+
+  .detailIcon {
+    width: 10px;
+    height: 10px;
+  }
+
+  .detailLabel {
+    font-size: 8px;
+  }
+
+  .detailValue {
+    font-size: 7px;
+  }
+
+  .detailActionButton {
+    border-radius: 4px;
+    height: 22px;
+    padding: 0 7px;
+    font-size: 7px;
+    gap: 3px;
+  }
+
+  .detailActionButton svg {
+    width: 8px;
+    height: 8px;
+  }
+
+  .paymentStatusIcon {
+    font-size: 16px;
+  }
+
+  .paymentStatusIcon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .timelineItem {
+    grid-template-columns: 18px 34px minmax(0, 1fr);
+    gap: 7px;
+    min-height: 24px;
+    font-size: 8px;
+  }
+
+  .timelineLine {
+    bottom: -13px;
+  }
+
+  .timelineDot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .timelineBadge {
+    display: none;
+  }
+
+  .miniChatCard {
+    padding: 8px;
+    margin-top: 8px;
+  }
+
+  .miniChatHeader {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .miniChatStatus {
+    gap: 4px;
+    min-height: 22px;
+    padding: 0 7px;
+    font-size: 7px;
+  }
+
+  .miniChatMessages {
+    gap: 7px;
+    max-height: 148px;
+    padding: 8px 0 9px;
+  }
+
+  .miniChatBubble {
+    max-width: 86%;
+    padding: 8px 9px 6px;
+    border-radius: 7px;
+    font-size: 8px;
+  }
+
+  .miniChatTime {
+    margin-top: 4px;
+    font-size: 6px;
+  }
+
+  .miniChatForm {
+    gap: 7px;
+    padding-top: 8px;
+  }
+
+  .miniChatInput {
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 7px;
+    font-size: 8px;
+  }
+
+  .miniChatSendButton {
+    width: 34px;
+    height: 34px;
+    border-radius: 7px;
+  }
+
+  .miniChatSendButton svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .mobileBottomBar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 58px;
+    background: rgba(6, 6, 6, 0.96);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    align-items: center;
+    padding: 8px 14px;
+    z-index: 20;
+  }
+
+  .mobileBottomLabel {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 7px;
+    font-weight: 800;
+  }
+
+  .mobileBottomTotal {
+    color: var(--yellow);
+    font-size: 15px;
+    font-weight: 900;
+  }
+
+  .mobileBottomDivider {
+    height: 34px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .supportButton {
+    background: transparent;
+    border: 0;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 8px;
+    font-weight: 900;
+  }
+
+  .supportButton svg {
+    width: 18px;
+    height: 18px;
+    color: var(--yellow);
+  }
+}
